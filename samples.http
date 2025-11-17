@@ -1,0 +1,11 @@
+GET http://localhost:5015/accounts
+
+POST http://localhost:5015/accounts
+content-type: application/json
+
+{
+  "accountNumber": "123456",
+  "accountHolder": "John Doe",
+  "balance": 1000.0
+}
+
