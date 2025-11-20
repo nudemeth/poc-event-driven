@@ -1,0 +1,1 @@
+public record CreateAccountCommand(string AccountHolder, decimal InitialDeposit);

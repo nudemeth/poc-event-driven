@@ -4,7 +4,7 @@ public class BankAccount()
     public string AccountHolder { get; private set; }
     public decimal Balance { get; private set; }
     public bool IsActive { get; private set; }
-    public List<DomainEvent> Events { get; }
+    public List<DomainEvent> Events { get; } = [];
 
     public static BankAccount Open(string accountHolder, decimal initialDeposit)
     {

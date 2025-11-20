@@ -1,11 +1,51 @@
 GET http://localhost:5015/accounts
 
+###
+# @name createAccount
 POST http://localhost:5015/accounts
 content-type: application/json
 
 {
-  "accountNumber": "123456",
   "accountHolder": "John Doe",
-  "balance": 1000.0
+  "initialDeposit": 1000.0
 }
 
+###
+@accountId = {{createAccount.response.body.$.id}}
+
+###
+
+POST http://localhost:5015/accounts/{{accountId}}/deposit
+content-type: application/json
+
+{
+  "amount": 500.0
+}
+
+###
+POST http://localhost:5015/accounts/{{accountId}}/withdraw
+content-type: application/json
+
+{
+  "amount": 200.0
+}
+
+###
+POST http://localhost:5015/accounts/{{accountId}}/transfer
+content-type: application/json  
+
+{
+  "toAccountNumber": "654321",
+  "amount": 300.0 
+}
+
+###
+POST http://localhost:5015/accounts/{{accountId}}/withdraw
+content-type: application/json
+
+{
+  "amount": 200.0
+}
+
+###
+DELETE http://localhost:5015/accounts/{{accountId}}

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 var accounts = new List<BankAccount>();
@@ -7,10 +9,11 @@ app.MapGet("/accounts", () =>
     return Results.Ok(accounts.Where(a => a.IsActive));
 });
 
-app.MapPost("/accounts", (BankAccount account) =>
+app.MapPost("/accounts", ([FromBody] CreateAccountCommand account) =>
 {
-    accounts.Add(account);
-    return Results.Created($"/accounts/{account.Id}", account);
+    var newAccount = BankAccount.Open(account.AccountHolder, account.InitialDeposit);
+    accounts.Add(newAccount);
+    return Results.Created($"/accounts/{newAccount.Id}", newAccount);
 });
 
 app.MapGet("/accounts/{id}", (Guid id) =>
@@ -19,7 +22,7 @@ app.MapGet("/accounts/{id}", (Guid id) =>
     return account != null ? Results.Ok(account) : Results.NotFound();
 });
 
-app.MapPost("/accounts/{id}/deposit", (Guid id, decimal amount) =>
+app.MapPost("/accounts/{id}/deposit", (Guid id, [FromBody] decimal amount) =>
 {
     var account = accounts.FirstOrDefault(a => a.Id == id);
     if (account == null)
@@ -38,7 +41,7 @@ app.MapPost("/accounts/{id}/deposit", (Guid id, decimal amount) =>
     }
 });
 
-app.MapPost("/accounts/{id}/withdraw", (Guid id, decimal amount) =>
+app.MapPost("/accounts/{id}/withdraw", (Guid id, [FromBody] decimal amount) =>
 {
     var account = accounts.FirstOrDefault(a => a.Id == id);
     if (account == null)
@@ -57,7 +60,7 @@ app.MapPost("/accounts/{id}/withdraw", (Guid id, decimal amount) =>
     }
 });
 
-app.MapPost("/accounts/{id}/transfer", (Guid id, Guid toAccountId, decimal amount) =>
+app.MapPost("/accounts/{id}/transfer", (Guid id, [FromBody] Guid toAccountId, decimal amount) =>
 {
     var account = accounts.FirstOrDefault(a => a.Id == id);
     var toAccount = accounts.FirstOrDefault(a => a.Id == toAccountId);
