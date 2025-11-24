@@ -1,0 +1,1 @@
+public record TransferCommand(Guid ToAccountNumber, decimal Amount);

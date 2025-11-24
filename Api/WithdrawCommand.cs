@@ -1,0 +1,1 @@
+public record WithdrawCommand(decimal Amount);

@@ -1,0 +1,1 @@
+public record DepositCommand(decimal Amount);

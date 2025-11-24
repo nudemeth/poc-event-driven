@@ -1,4 +1,9 @@
+# @name getAllAccounts
 GET http://localhost:5015/accounts
+
+###
+
+@transferToAccountId = {{getAllAccounts.response.body.$[0].id}}
 
 ###
 # @name createAccount
@@ -35,7 +40,7 @@ POST http://localhost:5015/accounts/{{accountId}}/transfer
 content-type: application/json  
 
 {
-  "toAccountNumber": "654321",
+  "toAccountNumber": "{{transferToAccountId}}",
   "amount": 300.0 
 }
 
