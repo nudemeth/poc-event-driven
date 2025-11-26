@@ -1,4 +1,6 @@
-public class BankAccount()
+namespace Domain.Account;
+
+public class AccountEntity
 {
     public Guid Id { get; private set; }
     public string AccountHolder { get; private set; }
@@ -6,7 +8,7 @@ public class BankAccount()
     public bool IsActive { get; private set; }
     public List<DomainEvent> Events { get; } = [];
 
-    public static BankAccount Open(string accountHolder, decimal initialDeposit)
+    public static AccountEntity Open(string accountHolder, decimal initialDeposit)
     {
         if (string.IsNullOrWhiteSpace(accountHolder))
         {
@@ -18,7 +20,7 @@ public class BankAccount()
             throw new ArgumentException("The initial deposit cannot be negative");
         }
 
-        var bankAccount = new BankAccount();
+        var bankAccount = new AccountEntity();
         var @event = new AccountOpened(Guid.NewGuid(), accountHolder, initialDeposit);
 
         bankAccount.Apply(@event);
@@ -123,9 +125,9 @@ public class BankAccount()
         Events.Add(@event);
     }
 
-    public static BankAccount ReplayEvents(IEnumerable<DomainEvent> events)
+    public static AccountEntity ReplayEvents(IEnumerable<DomainEvent> events)
     {
-        var bankAccount = new BankAccount();
+        var bankAccount = new AccountEntity();
         foreach (var @event in events)
         {
             bankAccount.Apply(@event);

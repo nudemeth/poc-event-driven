@@ -1,10 +1,12 @@
+using Application.Features;
+using Domain.Account;
 using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
-var accounts = new List<BankAccount>
+var accounts = new List<AccountEntity>
 {
-    BankAccount.Open("Alice", 1000),
+    AccountEntity.Open("Alice", 1000),
 };
 
 app.MapGet("/accounts", () =>
@@ -14,7 +16,7 @@ app.MapGet("/accounts", () =>
 
 app.MapPost("/accounts", ([FromBody] CreateAccountCommand command) =>
 {
-    var account = BankAccount.Open(command.AccountHolder, command.InitialDeposit);
+    var account = AccountEntity.Open(command.AccountHolder, command.InitialDeposit);
     accounts.Add(account);
     return Results.Created($"/accounts/{account.Id}", account);
 });
