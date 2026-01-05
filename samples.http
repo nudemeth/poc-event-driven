@@ -20,6 +20,10 @@ content-type: application/json
 
 ###
 
+GET http://localhost:5015/accounts/{{accountId}}
+
+###
+
 POST http://localhost:5015/accounts/{{accountId}}/deposit
 content-type: application/json
 
