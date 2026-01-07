@@ -1,5 +1,6 @@
 using Application;
 using Application.Features;
+using Api.Requests;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,21 +28,21 @@ app.MapGet("/accounts/{id}", async ([FromRoute] Guid id, [FromServices] ISender 
     return result != null ? Results.Ok(result) : Results.NotFound();
 });
 
-app.MapPost("/accounts/{id}/deposit", async ([FromRoute] Guid id, [FromBody] DepositCommand command, [FromServices] ISender sender) =>
+app.MapPost("/accounts/{id}/deposit", async ([FromRoute] Guid id, [FromBody] DepositRequest request, [FromServices] ISender sender) =>
 {
-    var result = await sender.Send(new DepositCommand(id, command.Amount));
+    var result = await sender.Send(new DepositCommand(id, request.Amount));
     return Results.Ok(result);
 });
 
-app.MapPost("/accounts/{id}/withdraw", async ([FromRoute] Guid id, [FromBody] WithdrawCommand command, [FromServices] ISender sender) =>
+app.MapPost("/accounts/{id}/withdraw", async ([FromRoute] Guid id, [FromBody] WithdrawRequest request, [FromServices] ISender sender) =>
 {
-    var result = await sender.Send(new WithdrawCommand(id, command.Amount));
+    var result = await sender.Send(new WithdrawCommand(id, request.Amount));
     return Results.Ok(result);
 });
 
-app.MapPost("/accounts/{id}/transfer", async ([FromRoute] Guid id, [FromBody] TransferCommand command, [FromServices] ISender sender) =>
+app.MapPost("/accounts/{id}/transfer", async ([FromRoute] Guid id, [FromBody] TransferRequest request, [FromServices] ISender sender) =>
 {
-    var result = await sender.Send(new TransferCommand(id, command.ToAccountNumber, command.Amount));
+    var result = await sender.Send(new TransferCommand(id, request.ToAccountNumber, request.Amount));
     return Results.Ok(result);
 });
 
