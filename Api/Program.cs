@@ -3,6 +3,7 @@ using Application.Features;
 using Api.Requests;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
+using Domain.Account;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +51,13 @@ app.MapDelete("/accounts/{id}", async ([FromRoute] Guid id, [FromServices] ISend
 {
     await sender.Send(new DeleteAccountCommand(id));
     return Results.NoContent();
+});
+
+app.MapGet("/accounts/{id}/replay", async ([FromRoute] Guid id, [FromServices] ISender sender) =>
+{
+    var account = await sender.Send(new GetAccountQuery(id));
+    var anotherAccount = AccountEntity.ReplayEvents(account.Events);
+    return Results.Ok(anotherAccount);
 });
 
 app.Run();

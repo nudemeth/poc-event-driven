@@ -2,8 +2,10 @@ namespace Domain.Account;
 
 public class AccountEntity
 {
+    private AccountEntity() { }
+
     public Guid Id { get; private set; }
-    public string AccountHolder { get; private set; }
+    public string AccountHolder { get; private set; } = default!;
     public decimal Balance { get; private set; }
     public bool IsActive { get; private set; }
     public List<DomainEvent> Events { get; } = [];
@@ -128,10 +130,12 @@ public class AccountEntity
     public static AccountEntity ReplayEvents(IEnumerable<DomainEvent> events)
     {
         var bankAccount = new AccountEntity();
+
         foreach (var @event in events)
         {
             bankAccount.Apply(@event);
         }
+
         return bankAccount;
     }
 }
