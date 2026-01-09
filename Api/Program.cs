@@ -3,11 +3,13 @@ using Application.Features;
 using Api.Requests;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
+using Infrastructure;
 using Domain.Account;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.ConfigureApplicationServices();
+builder.Services.ConfigureInfrastructureServices();
 
 var app = builder.Build();
 
