@@ -9,7 +9,7 @@ using Domain.Account;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.ConfigureApplicationServices();
-builder.Services.ConfigureInfrastructureServices();
+builder.Services.ConfigureInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
 
