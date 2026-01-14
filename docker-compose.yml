@@ -13,3 +13,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  dynamodb:
+    image: localstack/localstack:latest
+    container_name: localstack-dynamodb
+    restart: unless-stopped
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=dynamodb
+      - DEFAULT_REGION=us-east-1
+      - DATA_DIR=/tmp/localstack/data
+    volumes:
+      - localstack_data:/tmp/localstack
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4566/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
