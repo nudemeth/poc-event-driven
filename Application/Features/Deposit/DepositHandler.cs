@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Mediator;
 using Domain.Account;
 
@@ -8,9 +5,16 @@ namespace Application.Features;
 
 public class DepositHandler : ICommandHandler<DepositCommand, AccountEntity>
 {
-    public ValueTask<AccountEntity> Handle(DepositCommand command, CancellationToken cancellationToken)
+    private readonly IAccountRepository _accountRepository;
+
+    public DepositHandler(IAccountRepository accountRepository)
     {
-        var account = StaticDb.Accounts.FirstOrDefault(a => a.Id == command.Id);
+        _accountRepository = accountRepository;
+    }
+
+    public async ValueTask<AccountEntity> Handle(DepositCommand command, CancellationToken cancellationToken)
+    {
+        var account = await _accountRepository.GetAccountByIdAsync(command.Id);
         if (account == null)
         {
             throw new Exception("Account not found.");
@@ -19,7 +23,7 @@ public class DepositHandler : ICommandHandler<DepositCommand, AccountEntity>
         try
         {
             account.Deposit(command.Amount);
-            return ValueTask.FromResult(account);
+            return account;
         }
         catch (Exception ex)
         {

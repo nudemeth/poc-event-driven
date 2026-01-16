@@ -5,14 +5,21 @@ namespace Application.Features;
 
 public class GetAccountHandler : IQueryHandler<GetAccountQuery, AccountEntity>
 {
-    public ValueTask<AccountEntity> Handle(GetAccountQuery query, CancellationToken cancellationToken)
+    private readonly IAccountRepository _accountRepository;
+
+    public GetAccountHandler(IAccountRepository accountRepository)
     {
-        var account = StaticDb.Accounts.FirstOrDefault(a => a.Id == query.Id);
+        _accountRepository = accountRepository;
+    }
+
+    public async ValueTask<AccountEntity> Handle(GetAccountQuery query, CancellationToken cancellationToken)
+    {
+        var account = await _accountRepository.GetAccountByIdAsync(query.Id);
         if (account == null)
         {
             throw new Exception("Account not found.");
         }
 
-        return ValueTask.FromResult(account);
+        return account;
     }
 }

@@ -5,10 +5,17 @@ namespace Application.Features;
 
 public class TransferHandler : ICommandHandler<TransferCommand, AccountEntity>
 {
-    public ValueTask<AccountEntity> Handle(TransferCommand command, CancellationToken cancellationToken)
+    private readonly IAccountRepository _accountRepository;
+
+    public TransferHandler(IAccountRepository accountRepository)
     {
-        var account = StaticDb.Accounts.FirstOrDefault(a => a.Id == command.Id);
-        var toAccount = StaticDb.Accounts.FirstOrDefault(a => a.Id == command.ToAccountNumber);
+        _accountRepository = accountRepository;
+    }
+
+    public async ValueTask<AccountEntity> Handle(TransferCommand command, CancellationToken cancellationToken)
+    {
+        var account = await _accountRepository.GetAccountByIdAsync(command.Id);
+        var toAccount = await _accountRepository.GetAccountByIdAsync(command.ToAccountNumber);
         if (account == null || toAccount == null)
         {
             throw new Exception("One or both accounts not found.");
@@ -17,7 +24,7 @@ public class TransferHandler : ICommandHandler<TransferCommand, AccountEntity>
         try
         {
             account.Transfer(command.ToAccountNumber, command.Amount);
-            return ValueTask.FromResult(account);
+            return account;
         }
         catch (Exception ex)
         {

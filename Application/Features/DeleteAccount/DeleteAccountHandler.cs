@@ -1,10 +1,20 @@
 using Mediator;
+using Domain.Account;
+
+namespace Application.Features;
 
 public class DeleteAccountHandler : ICommandHandler<DeleteAccountCommand>
 {
-    public ValueTask<Unit> Handle(DeleteAccountCommand command, CancellationToken cancellationToken)
+    private readonly IAccountRepository _accountRepository;
+
+    public DeleteAccountHandler(IAccountRepository accountRepository)
     {
-        var account = StaticDb.Accounts.FirstOrDefault(a => a.Id == command.Id);
+        _accountRepository = accountRepository;
+    }
+
+    public async ValueTask<Unit> Handle(DeleteAccountCommand command, CancellationToken cancellationToken)
+    {
+        var account = await _accountRepository.GetAccountByIdAsync(command.Id);
         if (account == null)
         {
             throw new Exception("Account not found.");
@@ -13,7 +23,7 @@ public class DeleteAccountHandler : ICommandHandler<DeleteAccountCommand>
         try
         {
             account.Close();
-            return ValueTask.FromResult(Unit.Value);
+            return Unit.Value;
         }
         catch (Exception ex)
         {

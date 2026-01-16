@@ -5,9 +5,16 @@ namespace Application.Features;
 
 public class WithdrawHandler : ICommandHandler<WithdrawCommand, AccountEntity>
 {
-    public ValueTask<AccountEntity> Handle(WithdrawCommand command, CancellationToken cancellationToken)
+    private readonly IAccountRepository _accountRepository;
+
+    public WithdrawHandler(IAccountRepository accountRepository)
     {
-        var account = StaticDb.Accounts.FirstOrDefault(a => a.Id == command.Id);
+        _accountRepository = accountRepository;
+    }
+
+    public async ValueTask<AccountEntity> Handle(WithdrawCommand command, CancellationToken cancellationToken)
+    {
+        var account = await _accountRepository.GetAccountByIdAsync(command.Id);
         if (account == null)
         {
             throw new Exception("Account not found.");
@@ -16,7 +23,7 @@ public class WithdrawHandler : ICommandHandler<WithdrawCommand, AccountEntity>
         try
         {
             account.Withdraw(command.Amount);
-            return ValueTask.FromResult(account);
+            return account;
         }
         catch (Exception ex)
         {
