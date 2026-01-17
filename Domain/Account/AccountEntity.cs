@@ -1,10 +1,9 @@
 namespace Domain.Account;
 
-public class AccountEntity
+public class AccountEntity : Entity<Guid>
 {
-    private AccountEntity() { }
+    private AccountEntity(Guid id) : base(id) { }
 
-    public Guid Id { get; private set; }
     public string AccountHolder { get; private set; } = default!;
     public decimal Balance { get; private set; }
     public bool IsActive { get; private set; }
@@ -22,8 +21,8 @@ public class AccountEntity
             throw new ArgumentException("The initial deposit cannot be negative");
         }
 
-        var bankAccount = new AccountEntity();
-        var @event = new AccountOpened(Guid.NewGuid(), accountHolder, initialDeposit);
+        var bankAccount = new AccountEntity(Guid.NewGuid());
+        var @event = new AccountOpened(bankAccount.Id, accountHolder, initialDeposit);
 
         bankAccount.Apply(@event);
 
@@ -105,7 +104,6 @@ public class AccountEntity
         switch (@event)
         {
             case AccountOpened e:
-                Id = e.AccountId;
                 AccountHolder = e.AccountHolder;
                 Balance = e.InitialDeposit;
                 IsActive = true;
@@ -129,7 +127,7 @@ public class AccountEntity
 
     public static AccountEntity ReplayEvents(IEnumerable<DomainEvent> events)
     {
-        var bankAccount = new AccountEntity();
+        var bankAccount = new AccountEntity(events.First().StreamId);
 
         foreach (var @event in events)
         {
