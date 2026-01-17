@@ -16,7 +16,7 @@ public class CreateAccountHandler : ICommandHandler<CreateAccountCommand, Accoun
     {
         // Handler creates a new AccountEntity and returns it.
         var account = AccountEntity.Open(command.AccountHolder, command.InitialDeposit);
-        await _accountRepository.AppendAsync(account.Events[0]);
+        await _accountRepository.SaveAsync(account);
         return account;
     }
 }

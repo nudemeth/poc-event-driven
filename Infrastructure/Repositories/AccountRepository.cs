@@ -14,18 +14,26 @@ public class AccountRepository : IAccountRepository
         _dynamoDbClient = dynamoDbClient;
     }
 
-    public async Task AppendAsync<TEvent>(TEvent @event) where TEvent : DomainEvent
+    public async Task SaveAsync(AccountEntity account)
     {
-        // Implementation to append account to DynamoDB
-        var json = JsonSerializer.Serialize(@event);
-        var document = Document.FromJson(json);
-        var attributes = document.ToAttributeMap();
-        var request = new PutItemRequest
+        var request = new TransactWriteItemsRequest
         {
-            TableName = "Accounts",
-            Item = attributes
+            TransactItems = account.Events.Select(e => new TransactWriteItem
+            {
+                Put = new Put
+                {
+                    TableName = "Accounts",
+                    Item = new Dictionary<string, AttributeValue>
+                    {
+                        { "StreamId", new AttributeValue { S = e.StreamId.ToString() } },
+                        { "EventType", new AttributeValue { S = e.GetType().Name } },
+                        { "Data", new AttributeValue { S = JsonSerializer.Serialize(e) } },
+                        { "Timestamp", new AttributeValue { S = DateTime.UtcNow.ToString("o") } }
+                    }
+                }
+            }).ToList()
         };
-        await _dynamoDbClient.PutItemAsync(request);
+        await _dynamoDbClient.TransactWriteItemsAsync(request);
     }
 
     public async Task<AccountEntity?> GetAccountByIdAsync(Guid id)
