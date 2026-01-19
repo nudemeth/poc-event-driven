@@ -3,8 +3,8 @@ services:
     image: postgres:17
     restart: always
     environment:
-      POSTGRES_USER: my_username
-      POSTGRES_PASSWORD: my_password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespwd
       POSTGRES_DB: poc_db
     ports:
       - "5432:5432"
@@ -16,16 +16,39 @@ services:
 
   dynamodb:
     image: localstack/localstack:latest
-    container_name: localstack-dynamodb
+    container_name: localstack
     restart: unless-stopped
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=dynamodb
-      - DEFAULT_REGION=us-east-1
-      - DATA_DIR=/tmp/localstack/data
+      - SERVICES=s3,dynamodb
+      - PERSISTENCE=1
+    volumes:
+      - localstack_data:/tmp/localstack-data
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:4566/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:4566/ || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  terraform:
+    image: hashicorp/terraform:latest
+    container_name: terraform-dynamodb
+    working_dir: /terraform
+    volumes:
+      - ./ci/terraform:/terraform
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    depends_on:
+      dynamodb:
+        condition: service_healthy
+    command:
+      - init
+      - apply -auto-approve
+    networks:
+      - default
+
+volumes:
+  localstack_data:
