@@ -35,6 +35,7 @@ services:
     image: hashicorp/terraform:latest
     container_name: terraform-dynamodb
     working_dir: /terraform
+    entrypoint: ["/bin/sh", "-c"]
     volumes:
       - ./ci/terraform:/terraform
     environment:
@@ -45,8 +46,7 @@ services:
       dynamodb:
         condition: service_healthy
     command:
-      - init
-      - apply -auto-approve
+      ["terraform init && terraform plan && terraform apply -auto-approve"]
     networks:
       - default
 
