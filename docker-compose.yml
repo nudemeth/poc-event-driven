@@ -22,9 +22,8 @@ services:
       - "4566:4566"
     environment:
       - SERVICES=s3,dynamodb
-      - PERSISTENCE=1
-    volumes:
-      - localstack_data:/tmp/localstack-data
+      - PERSISTENCE=0
+      - DYNAMODB_IN_MEMORY=1
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:4566/ || exit 1"]
       interval: 10s
@@ -34,7 +33,7 @@ services:
   terraform:
     image: hashicorp/terraform:latest
     container_name: terraform-dynamodb
-    working_dir: /terraform
+    working_dir: /tmp/terraform
     entrypoint: ["/bin/sh", "-c"]
     volumes:
       - ./ci/terraform:/terraform
@@ -46,9 +45,28 @@ services:
       dynamodb:
         condition: service_healthy
     command:
-      ["terraform init && terraform plan && terraform apply -auto-approve"]
+      [
+        "cp -r /terraform/* /tmp/terraform && terraform init && terraform apply -auto-approve",
+      ]
     networks:
       - default
 
-volumes:
-  localstack_data:
+  nodejs:
+    image: node:24-alpine
+    container_name: nodejs-app
+    ports:
+      - "4567:8001"
+    entrypoint: ["/bin/sh", "-c"]
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    depends_on:
+      terraform:
+        condition: service_completed_successfully
+    command:
+      [
+        "npm install -g dynamodb-admin && dynamodb-admin --dynamo-endpoint=http://dynamodb:4566",
+      ]
+    networks:
+      - default
