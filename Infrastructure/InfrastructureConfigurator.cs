@@ -8,6 +8,7 @@ public static class InfrastructureConfigurator
 {
     public static void ConfigureInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddDefaultAWSOptions(configuration.GetAWSOptions());
         services.AddAWSService<IAmazonDynamoDB>();
     }
 }
