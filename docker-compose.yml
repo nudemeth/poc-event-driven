@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:17
+    container_name: postgres-db
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -32,7 +33,7 @@ services:
 
   terraform:
     image: hashicorp/terraform:latest
-    container_name: terraform-dynamodb
+    container_name: terraform
     working_dir: /tmp/terraform
     entrypoint: ["/bin/sh", "-c"]
     volumes:
@@ -53,7 +54,7 @@ services:
 
   nodejs:
     image: node:24-alpine
-    container_name: nodejs-app
+    container_name: dynamodb-explorer
     ports:
       - "4567:8001"
     entrypoint: ["/bin/sh", "-c"]

@@ -1,12 +1,11 @@
 using System.Text.Json;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
-using Domain;
 using Domain.Account;
 
 public class AccountRepository : IAccountRepository
 {
+    private const string AccountTableName = "Accounts";
     private readonly IAmazonDynamoDB _dynamoDbClient;
 
     public AccountRepository(IAmazonDynamoDB dynamoDbClient)
@@ -22,7 +21,7 @@ public class AccountRepository : IAccountRepository
             {
                 Put = new Put
                 {
-                    TableName = "Accounts",
+                    TableName = AccountTableName,
                     Item = new Dictionary<string, AttributeValue>
                     {
                         { "StreamId", new AttributeValue { S = e.StreamId.ToString() } },
