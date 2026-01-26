@@ -25,8 +25,8 @@ public class AccountRepository : IAccountRepository
                     Item = new Dictionary<string, AttributeValue>
                     {
                         { "StreamId", new AttributeValue { S = e.StreamId.ToString() } },
-                        { "EventType", new AttributeValue { S = e.GetType().Name } },
-                        { "Data", new AttributeValue { S = JsonSerializer.Serialize(e) } },
+                        { "EventType", new AttributeValue { S = e.EventType } },
+                        { "Data", new AttributeValue { S = JsonSerializer.Serialize(e, DomainEventJsonOptions.Instance) } },
                         { "Timestamp", new AttributeValue { S = DateTime.UtcNow.ToString("o") } }
                     }
                 }
