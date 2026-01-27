@@ -23,16 +23,17 @@ public static class DomainEventJsonOptions
             {
                 jsonTypeInfo.PolymorphismOptions = new JsonPolymorphismOptions
                 {
+                    TypeDiscriminatorPropertyName = "EventType",
                     IgnoreUnrecognizedTypeDiscriminators = true,
                     UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FailSerialization,
                     DerivedTypes =
-                {
-                    new JsonDerivedType(typeof(AccountOpened)),
-                    new JsonDerivedType(typeof(AccountClosed)),
-                    new JsonDerivedType(typeof(MoneyDeposited)),
-                    new JsonDerivedType(typeof(MoneyTransferred)),
-                    new JsonDerivedType(typeof(MoneyWithdrawn))
-                }
+                    {
+                        new JsonDerivedType(typeof(AccountOpened)),
+                        new JsonDerivedType(typeof(AccountClosed)),
+                        new JsonDerivedType(typeof(MoneyDeposited)),
+                        new JsonDerivedType(typeof(MoneyTransferred)),
+                        new JsonDerivedType(typeof(MoneyWithdrawn))
+                    }
                 };
             }
 
