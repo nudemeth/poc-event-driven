@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
+using Domain;
 using Domain.Account;
 
 public class AccountRepository : IAccountRepository
@@ -25,7 +27,7 @@ public class AccountRepository : IAccountRepository
                     Item = new Dictionary<string, AttributeValue>
                     {
                         { "StreamId", new AttributeValue { S = e.StreamId.ToString() } },
-                        { "EventType", new AttributeValue { S = e.EventType } },
+                        { "EventType", new AttributeValue { S = e.GetType().Name } },
                         { "Data", new AttributeValue { S = JsonSerializer.Serialize(e, DomainEventJsonOptions.Instance) } },
                         { "Timestamp", new AttributeValue { S = DateTime.UtcNow.ToString("o") } }
                     }
@@ -37,7 +39,33 @@ public class AccountRepository : IAccountRepository
 
     public async Task<AccountEntity?> GetAccountByIdAsync(Guid id)
     {
-        // Implementation to get account by ID from DynamoDB
-        return null;
+        var queryRequest = new QueryRequest
+        {
+            TableName = AccountTableName,
+            KeyConditionExpression = "StreamId = :v_StreamId",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":v_StreamId", new AttributeValue { S = id.ToString() } }
+            }
+        };
+        var response = await _dynamoDbClient.QueryAsync(queryRequest);
+
+        if (response.Count == 0)
+        {
+            return null;
+        }
+
+        var docs = response.Items.Select(Document.FromAttributeMap);
+        var events = new List<DomainEvent>();
+
+        foreach (var doc in docs)
+        {
+            var json = doc.ToJson();
+            events.Add(JsonSerializer.Deserialize<DomainEvent>(json, DomainEventJsonOptions.Instance)!);
+        }
+
+        var account = AccountEntity.ReplayEvents(events!);
+
+        return account;
     }
 }
