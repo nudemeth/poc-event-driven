@@ -9,6 +9,7 @@ public static class DomainEventJsonOptions
     public static readonly JsonSerializerOptions Instance = new()
     {
         TypeInfoResolver = new DomainEventTypeResolver(),
+        AllowOutOfOrderMetadataProperties = true,
         WriteIndented = false
     };
 
@@ -28,11 +29,11 @@ public static class DomainEventJsonOptions
                     UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FailSerialization,
                     DerivedTypes =
                     {
-                        new JsonDerivedType(typeof(AccountOpened)),
-                        new JsonDerivedType(typeof(AccountClosed)),
-                        new JsonDerivedType(typeof(MoneyDeposited)),
-                        new JsonDerivedType(typeof(MoneyTransferred)),
-                        new JsonDerivedType(typeof(MoneyWithdrawn))
+                        new JsonDerivedType(typeof(AccountOpened), nameof(AccountOpened)),
+                        new JsonDerivedType(typeof(AccountClosed), nameof(AccountClosed)),
+                        new JsonDerivedType(typeof(MoneyDeposited), nameof(MoneyDeposited)),
+                        new JsonDerivedType(typeof(MoneyTransferred), nameof(MoneyTransferred)),
+                        new JsonDerivedType(typeof(MoneyWithdrawn), nameof(MoneyWithdrawn))
                     }
                 };
             }

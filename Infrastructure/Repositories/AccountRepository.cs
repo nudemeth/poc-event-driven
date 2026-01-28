@@ -19,27 +19,27 @@ public class AccountRepository : IAccountRepository
     {
         var request = new TransactWriteItemsRequest
         {
-            TransactItems = account.Events.Select(e => new TransactWriteItem
-            {
-                Put = new Put
+            TransactItems = account.Events
+                .Select(e => JsonSerializer.Serialize(e, DomainEventJsonOptions.Instance))
+                .Select(Document.FromJson)
+                .Select(doc => doc.ToAttributeMap())
+                .Select(attributeMap => new TransactWriteItem
                 {
-                    TableName = AccountTableName,
-                    Item = new Dictionary<string, AttributeValue>
+                    Put = new Put
                     {
-                        { "StreamId", new AttributeValue { S = e.StreamId.ToString() } },
-                        { "EventType", new AttributeValue { S = e.GetType().Name } },
-                        { "Data", new AttributeValue { S = JsonSerializer.Serialize(e, DomainEventJsonOptions.Instance) } },
-                        { "Timestamp", new AttributeValue { S = DateTime.UtcNow.ToString("o") } }
+                        TableName = AccountTableName,
+                        Item = attributeMap
                     }
-                }
-            }).ToList()
+                })
+                .ToList()
         };
+
         await _dynamoDbClient.TransactWriteItemsAsync(request);
     }
 
     public async Task<AccountEntity?> GetAccountByIdAsync(Guid id)
     {
-        var queryRequest = new QueryRequest
+        var request = new QueryRequest
         {
             TableName = AccountTableName,
             KeyConditionExpression = "StreamId = :v_StreamId",
@@ -48,23 +48,18 @@ public class AccountRepository : IAccountRepository
                 { ":v_StreamId", new AttributeValue { S = id.ToString() } }
             }
         };
-        var response = await _dynamoDbClient.QueryAsync(queryRequest);
+        var response = await _dynamoDbClient.QueryAsync(request);
 
         if (response.Count == 0)
         {
             return null;
         }
 
-        var docs = response.Items.Select(Document.FromAttributeMap);
-        var events = new List<DomainEvent>();
-
-        foreach (var doc in docs)
-        {
-            var json = doc.ToJson();
-            events.Add(JsonSerializer.Deserialize<DomainEvent>(json, DomainEventJsonOptions.Instance)!);
-        }
-
-        var account = AccountEntity.ReplayEvents(events!);
+        var events = response.Items
+            .Select(Document.FromAttributeMap)
+            .Select(doc => doc.ToJson())
+            .Select(json => JsonSerializer.Deserialize<DomainEvent>(json, DomainEventJsonOptions.Instance)!);
+        var account = AccountEntity.ReplayEvents(events);
 
         return account;
     }
