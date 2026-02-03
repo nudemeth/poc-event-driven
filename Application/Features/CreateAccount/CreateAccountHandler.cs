@@ -14,7 +14,6 @@ public class CreateAccountHandler : ICommandHandler<CreateAccountCommand, Accoun
 
     public async ValueTask<AccountEntity> Handle(CreateAccountCommand command, CancellationToken cancellationToken)
     {
-        // Handler creates a new AccountEntity and returns it.
         var account = AccountEntity.Open(command.AccountHolder, command.InitialDeposit);
         await _accountRepository.SaveAsync(account);
         return account;

@@ -1,12 +1,18 @@
-# @name getAllAccounts
-GET http://localhost:5015/accounts
+# @name createAccount1
+POST http://localhost:5015/accounts
+content-type: application/json
+
+{
+  "accountHolder": "Somying 422R",
+  "initialDeposit": 1000.0
+}
 
 ###
 
-@transferToAccountId = {{getAllAccounts.response.body.$[0].id}}
+@transferToAccountId = {{createAccount1.response.body.$.id}}
 
 ###
-# @name createAccount
+# @name createAccount2
 POST http://localhost:5015/accounts
 content-type: application/json
 
@@ -16,7 +22,7 @@ content-type: application/json
 }
 
 ###
-@accountId = {{createAccount.response.body.$.id}}
+@accountId = {{createAccount2.response.body.$.id}}
 
 ###
 
@@ -61,4 +67,4 @@ DELETE http://localhost:5015/accounts/{{accountId}}
 
 ###
 
-GET http://localhost:5015/accounts/{{accountId}}/replay
+GET http://localhost:5015/accounts/{{accountId}}

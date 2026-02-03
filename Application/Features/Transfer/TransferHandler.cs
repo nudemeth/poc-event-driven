@@ -24,6 +24,7 @@ public class TransferHandler : ICommandHandler<TransferCommand, AccountEntity>
         try
         {
             account.Transfer(command.ToAccountNumber, command.Amount);
+            await _accountRepository.SaveAsync(account);
             return account;
         }
         catch (Exception ex)

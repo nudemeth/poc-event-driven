@@ -23,6 +23,7 @@ public class DepositHandler : ICommandHandler<DepositCommand, AccountEntity>
         try
         {
             account.Deposit(command.Amount);
+            await _accountRepository.SaveAsync(account);
             return account;
         }
         catch (Exception ex)

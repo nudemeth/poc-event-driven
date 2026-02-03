@@ -23,6 +23,7 @@ public class WithdrawHandler : ICommandHandler<WithdrawCommand, AccountEntity>
         try
         {
             account.Withdraw(command.Amount);
+            await _accountRepository.SaveAsync(account);
             return account;
         }
         catch (Exception ex)
