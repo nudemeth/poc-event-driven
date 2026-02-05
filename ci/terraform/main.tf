@@ -22,10 +22,12 @@ provider "aws" {
 
 # DynamoDB Table for Accounts
 resource "aws_dynamodb_table" "accounts" {
-  name           = "Accounts"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "StreamId"
-  range_key      = "Timestamp"
+  name             = "Accounts"
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "StreamId"
+  range_key        = "Timestamp"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
     name = "StreamId"
@@ -53,4 +55,9 @@ output "dynamodb_table_name" {
 output "dynamodb_table_arn" {
   value       = aws_dynamodb_table.accounts.arn
   description = "The ARN of the DynamoDB table"
+}
+
+output "dynamodb_table_stream_arn" {
+  value       = aws_dynamodb_table.accounts.stream_arn
+  description = "The Stream ARN of the DynamoDB table"
 }

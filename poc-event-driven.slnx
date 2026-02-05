@@ -5,4 +5,7 @@
     <Project Path="AccountApi/Domain/Domain.csproj" />
     <Project Path="AccountApi/Infrastructure/Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/AccountEventListener/">
+    <Project Path="AccountEventListener/AccountEventListener.csproj" />
+  </Folder>
 </Solution>

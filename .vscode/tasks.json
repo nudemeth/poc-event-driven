@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "dotnet",
+      "task": "build E:\\development\\opensource\\poc-event-driven\\AccountEventListener\\AccountEventListener.csproj",
+      "file": "E:\\development\\opensource\\poc-event-driven\\AccountEventListener\\AccountEventListener.csproj",
+      "group": "build",
+      "problemMatcher": [],
+      "label": "dotnet build AccountEventListener.csproj"
+    }
+  ]
+}
