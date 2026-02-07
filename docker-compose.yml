@@ -19,12 +19,13 @@ services:
     image: localstack/localstack:latest
     container_name: localstack
     restart: unless-stopped
+    volumes:
+      - ./temp/localstack-data:/var/lib/localstack
     ports:
       - "4566:4566"
     environment:
       - SERVICES=s3,dynamodb
-      - PERSISTENCE=0
-      - DYNAMODB_IN_MEMORY=1
+      - PERSISTENCE=1
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:4566/ || exit 1"]
       interval: 10s
@@ -37,7 +38,8 @@ services:
     working_dir: /tmp/terraform
     entrypoint: ["/bin/sh", "-c"]
     volumes:
-      - ./ci/terraform:/terraform
+      - ./ci/terraform:/src/terraform
+      - ./temp/terraform:/tmp/terraform
     environment:
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
@@ -47,7 +49,7 @@ services:
         condition: service_healthy
     command:
       [
-        "cp -r /terraform/* /tmp/terraform && terraform init && terraform apply -auto-approve",
+        "cp -r /src/terraform/* /tmp/terraform && terraform init && terraform apply -auto-approve",
       ]
     networks:
       - default
