@@ -11,7 +11,7 @@ resource "aws_dynamodb_table" "accounts" {
     type = "S"
   }
 
-  attribute { 
+  attribute {
     name = "Timestamp"
     type = "S"
   }
