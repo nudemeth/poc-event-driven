@@ -2,12 +2,22 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "type": "dotnet",
-      "task": "build E:\\development\\opensource\\poc-event-driven\\AccountEventListener\\AccountEventListener.csproj",
-      "file": "E:\\development\\opensource\\poc-event-driven\\AccountEventListener\\AccountEventListener.csproj",
-      "group": "build",
-      "problemMatcher": [],
-      "label": "dotnet build AccountEventListener.csproj"
+      "label": "publish AccontEventListener",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "publish",
+        "${workspaceFolder}/AccountEventListener/AccountEventListener.csproj",
+        "-c",
+        "Release",
+        "-o",
+        "${workspaceFolder}/AccountEventListener/publish"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": "$msCompile"
     }
   ]
 }
