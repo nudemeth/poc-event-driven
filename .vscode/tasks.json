@@ -3,15 +3,16 @@
   "tasks": [
     {
       "label": "publish AccontEventListener",
+      "options": {
+        "cwd": "${workspaceFolder}/AccountEventListener"
+      },
       "command": "dotnet",
       "type": "process",
       "args": [
-        "publish",
-        "${workspaceFolder}/AccountEventListener/AccountEventListener.csproj",
-        "-c",
-        "Release",
-        "-o",
-        "${workspaceFolder}/AccountEventListener/publish"
+        "lambda",
+        "package",
+        "--output-package",
+        "${workspaceFolder}/ci/terraform/AccountEventListener.zip"
       ],
       "presentation": {
         "reveal": "always",
