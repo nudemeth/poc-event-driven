@@ -1,25 +1,14 @@
 resource "aws_lambda_function" "account_event_listener" {
   function_name = "account-event-listener"
-  role          = aws_iam_role.account_event_listener_role.arn
+  role          = "arn:aws:iam::000000000000:role/account-event-listener-role"
   handler       = "AccountEventListener"
-  runtime       = "dotnet10"
+  runtime       = "dotnet8"
   filename      = "./AccountEventListener.zip"
   publish       = true
 }
 
-resource "aws_iam_role" "account_event_listener_role" {
-  name = "account-event-listener-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
+resource "aws_lambda_event_source_mapping" "dynamodb_to_lambda" {
+  event_source_arn  = aws_dynamodb_table.accounts.stream_arn
+  function_name     = aws_lambda_function.account_event_listener.arn
+  starting_position = "LATEST"
 }

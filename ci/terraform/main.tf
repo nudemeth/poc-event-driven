@@ -17,5 +17,6 @@ provider "aws" {
 
   endpoints {
     dynamodb = "http://localstack:4566"
+    lambda   = "http://localstack:4566"
   }
 }
