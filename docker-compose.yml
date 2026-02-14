@@ -20,13 +20,12 @@ services:
     container_name: localstack
     restart: unless-stopped
     volumes:
-      - ./temp/localstack-data:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "4566:4566"
     environment:
       - SERVICES=s3,dynamodb,lambda,logs
-      - PERSISTENCE=1
+      - PERSISTENCE=0
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:4566/ || exit 1"]
       interval: 10s
@@ -40,7 +39,6 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     volumes:
       - ./ci/terraform:/src/terraform
-      - ./temp/terraform:/tmp/terraform
     environment:
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
