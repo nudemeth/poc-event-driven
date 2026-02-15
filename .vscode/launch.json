@@ -5,17 +5,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": ".NET Core Launch (Lambda Test Tool)",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "dotnet build AccountEventListener.csproj",
-      "program": "${workspaceFolder}/AccountEventListener/bin/Debug/net10.0/AccountEventListener.dll",
-      "args": [],
-      "cwd": "${workspaceFolder}",
-      "stopAtEntry": false,
-      "console": "internalConsole"
-    },
-    {
       "name": "C#: Account Api Debug",
       "type": "dotnet",
       "request": "launch",

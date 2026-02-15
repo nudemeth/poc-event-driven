@@ -8,4 +8,7 @@
   <Folder Name="/AccountEventListener/">
     <Project Path="AccountEventListener/AccountEventListener.csproj" />
   </Folder>
+  <Folder Name="/DbMigration/">
+    <Project Path="DbMigration/DbMigration.csproj" />
+  </Folder>
 </Solution>

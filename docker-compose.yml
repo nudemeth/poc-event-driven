@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgrespwd
-      POSTGRES_DB: poc_db
+      POSTGRES_DB: accountdb
     ports:
       - "5432:5432"
     healthcheck:
