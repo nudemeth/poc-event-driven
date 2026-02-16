@@ -1,5 +1,5 @@
+using AccountDataAccess;
 using Domain.Account;
-using DbMigration.EntityTypeConfigs;
 using Microsoft.EntityFrameworkCore;
 
 namespace DbMigration;

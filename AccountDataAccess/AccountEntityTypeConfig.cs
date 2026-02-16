@@ -2,7 +2,7 @@ using Domain.Account;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace DbMigration.EntityTypeConfigs;
+namespace AccountDataAccess;
 
 public class AccountEntityTypeConfig : IEntityTypeConfiguration<AccountEntity>
 {

@@ -2,7 +2,7 @@ resource "aws_lambda_function" "account_event_listener" {
   function_name    = "account-event-listener"
   role             = "arn:aws:iam::000000000000:role/account-event-listener-role"
   handler          = "AccountEventListener"
-  runtime          = "dotnet8"
+  runtime          = "dotnet10"
   filename         = "./AccountEventListener.zip"
   source_code_hash = filebase64sha256("./AccountEventListener.zip")
   publish          = true
