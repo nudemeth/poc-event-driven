@@ -15,6 +15,25 @@ services:
       timeout: 5s
       retries: 5
 
+  ef-migrations:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    container_name: ef-migrations
+    working_dir: /src/AccountDataAccess
+    entrypoint: ["/bin/sh", "-c"]
+    volumes:
+      - .:/src
+    environment:
+      - CONNECTION_STRING=Host=postgres-db;Port=5432;Database=accountdb;Username=postgres;Password=postgrespwd
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      [
+        "dotnet restore && dotnet tool install dotnet-ef && dotnet ef database update --connection $CONNECTION_STRING",
+      ]
+    networks:
+      - default
+
   localstack:
     image: localstack/localstack:latest
     container_name: localstack

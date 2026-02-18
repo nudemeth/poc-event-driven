@@ -2,7 +2,7 @@ using Domain.Account;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace AccountDataAccess;
+namespace AccountDataAccess.EntityTypeConfigs;
 
 public class AccountEntityTypeConfig : IEntityTypeConfiguration<AccountEntity>
 {

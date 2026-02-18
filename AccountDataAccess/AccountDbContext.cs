@@ -1,12 +1,12 @@
-using AccountDataAccess;
+using AccountDataAccess.EntityTypeConfigs;
 using Domain.Account;
 using Microsoft.EntityFrameworkCore;
 
-namespace DbMigration;
+namespace AccountDataAccess;
 
-public class MigrationDbContext : DbContext
+public class AccountDbContext : DbContext
 {
-    public MigrationDbContext(DbContextOptions<MigrationDbContext> options) : base(options)
+    public AccountDbContext(DbContextOptions<AccountDbContext> options) : base(options)
     {
     }
 
