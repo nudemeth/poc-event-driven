@@ -8,7 +8,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AccountDbC
     public AccountDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<AccountDbContext>();
-        optionsBuilder.UseNpgsql("Host=localhost;Database=accounts;Username=postgres;Password=postgrespwd");
+        optionsBuilder.UseNpgsql();
 
         return new AccountDbContext(optionsBuilder.Options);
     }

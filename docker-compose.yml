@@ -18,7 +18,7 @@ services:
   ef-migrations:
     image: mcr.microsoft.com/dotnet/sdk:10.0
     container_name: ef-migrations
-    working_dir: /src/AccountDataAccess
+    working_dir: /tmp/AccountDataAccess
     entrypoint: ["/bin/sh", "-c"]
     volumes:
       - .:/src
@@ -29,7 +29,7 @@ services:
         condition: service_healthy
     command:
       [
-        "dotnet restore && dotnet tool install dotnet-ef && dotnet ef database update --connection $CONNECTION_STRING",
+        "cp -r /src/* /tmp && dotnet tool install dotnet-ef && dotnet restore && dotnet ef database update --connection $$CONNECTION_STRING",
       ]
     networks:
       - default
