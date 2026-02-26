@@ -1,5 +1,4 @@
 using Mediator;
-using AccountEventListener.Features.AccountEvents;
 using Domain.Account;
 using Domain;
 
@@ -11,11 +10,11 @@ public static class EventTypeFactory
     {
         return domainEvent switch
         {
-            AccountOpened accountOpenedEvent => new AccountOpenedNotification(accountOpenedEvent),
-            AccountClosed accountClosedEvent => new AccountClosedNotification(accountClosedEvent),
-            MoneyDeposited moneyDepositedEvent => new MoneyDepositedNotification(moneyDepositedEvent),
-            MoneyWithdrawn moneyWithdrawnEvent => new MoneyWithdrawnNotification(moneyWithdrawnEvent),
-            MoneyTransferred moneyTransferredEvent => new MoneyTransferredNotification(moneyTransferredEvent),
+            AccountOpened accountOpenedEvent => accountOpenedEvent,
+            AccountClosed accountClosedEvent => accountClosedEvent,
+            MoneyDeposited moneyDepositedEvent => moneyDepositedEvent,
+            MoneyWithdrawn moneyWithdrawnEvent => moneyWithdrawnEvent,
+            MoneyTransferred moneyTransferredEvent => moneyTransferredEvent,
             _ => null
         };
     }
