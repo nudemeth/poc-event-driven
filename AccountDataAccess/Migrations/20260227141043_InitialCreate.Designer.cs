@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AccountDataAccess.Migrations
 {
     [DbContext(typeof(AccountDbContext))]
-    [Migration("20260218132119_InitialCreate")]
+    [Migration("20260227141043_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -25,7 +25,7 @@ namespace AccountDataAccess.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Domain.Account.AccountEntity", b =>
+            modelBuilder.Entity("AccountDataAccess.AccountProjection", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -47,7 +47,7 @@ namespace AccountDataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Accounts");
+                    b.ToTable("AccountProjections", (string)null);
                 });
 #pragma warning restore 612, 618
         }

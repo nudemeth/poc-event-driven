@@ -2,12 +2,14 @@ using Domain.Account;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace AccountDataAccess.EntityTypeConfigs;
+namespace AccountDataAccess;
 
-public class AccountEntityTypeConfig : IEntityTypeConfiguration<AccountEntity>
+public class AccountProjectionTypeConfig : IEntityTypeConfiguration<AccountProjection>
 {
-    public void Configure(EntityTypeBuilder<AccountEntity> builder)
+    public void Configure(EntityTypeBuilder<AccountProjection> builder)
     {
+        builder.ToTable("AccountProjections");
+
         builder.HasKey(a => a.Id);
 
         builder.Property(a => a.AccountHolder)
@@ -19,7 +21,5 @@ public class AccountEntityTypeConfig : IEntityTypeConfiguration<AccountEntity>
 
         builder.Property(a => a.IsActive)
             .HasDefaultValue(true);
-
-        builder.Ignore(a => a.Events);
     }
 }

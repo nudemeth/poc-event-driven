@@ -1,5 +1,3 @@
-using AccountDataAccess.EntityTypeConfigs;
-using Domain.Account;
 using Microsoft.EntityFrameworkCore;
 
 namespace AccountDataAccess;
@@ -10,11 +8,11 @@ public class AccountDbContext : DbContext
     {
     }
 
-    public DbSet<AccountEntity> Accounts { get; set; }
+    public DbSet<AccountProjection> Accounts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.ApplyConfiguration(new AccountEntityTypeConfig());
+        modelBuilder.ApplyConfiguration(new AccountProjectionTypeConfig());
     }
 }

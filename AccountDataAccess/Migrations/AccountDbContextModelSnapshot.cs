@@ -22,7 +22,7 @@ namespace AccountDataAccess.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Domain.Account.AccountEntity", b =>
+            modelBuilder.Entity("AccountDataAccess.AccountProjection", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -44,7 +44,7 @@ namespace AccountDataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Accounts");
+                    b.ToTable("AccountProjections", (string)null);
                 });
 #pragma warning restore 612, 618
         }

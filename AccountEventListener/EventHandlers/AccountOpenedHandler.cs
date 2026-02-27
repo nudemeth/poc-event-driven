@@ -1,3 +1,4 @@
+using AccountDataAccess;
 using Amazon.Lambda.Core;
 using Domain.Account;
 using Mediator;
@@ -7,19 +8,33 @@ namespace AccountEventListener.EventHandlers;
 public class AccountOpenedHandler : INotificationHandler<AccountOpened>
 {
     private readonly ILambdaContext _context;
+    private readonly AccountDbContext _dbContext;
 
-    public AccountOpenedHandler(ILambdaContext context)
+    public AccountOpenedHandler(ILambdaContext context, AccountDbContext dbContext)
     {
         _context = context;
+        _dbContext = dbContext;
     }
 
-    public ValueTask Handle(AccountOpened notification, CancellationToken cancellationToken)
+    public async ValueTask Handle(AccountOpened notification, CancellationToken cancellationToken)
     {
         _context.Logger.LogInformation("Handling AccountOpened event");
-        _context.Logger.LogInformation($"Account data: {notification.EventData}");
+        _context.Logger.LogInformation($"Account ID: {notification.AccountId}, Holder: {notification.AccountHolder}, Initial Deposit: {notification.InitialDeposit}");
 
-        // Add your AccountOpened processing logic here
+        try
+        {
+            // Create new account entity for read-side projection
+            var account = new AccountProjection(notification.AccountId, notification.AccountHolder, notification.InitialDeposit, true);
 
-        return ValueTask.CompletedTask;
+            _dbContext.Accounts.Add(account);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            _context.Logger.LogInformation($"Account {notification.AccountId} projection created in read-side database");
+        }
+        catch (Exception ex)
+        {
+            _context.Logger.LogError($"Error handling AccountOpened event: {ex.Message}");
+            throw;
+        }
     }
 }

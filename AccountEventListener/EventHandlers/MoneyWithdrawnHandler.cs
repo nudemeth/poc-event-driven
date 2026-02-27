@@ -1,3 +1,4 @@
+using AccountDataAccess;
 using Amazon.Lambda.Core;
 using Domain.Account;
 using Mediator;
@@ -7,19 +8,39 @@ namespace AccountEventListener.EventHandlers;
 public class MoneyWithdrawnHandler : INotificationHandler<MoneyWithdrawn>
 {
     private readonly ILambdaContext _context;
+    private readonly AccountDbContext _dbContext;
 
-    public MoneyWithdrawnHandler(ILambdaContext context)
+    public MoneyWithdrawnHandler(ILambdaContext context, AccountDbContext dbContext)
     {
         _context = context;
+        _dbContext = dbContext;
     }
 
-    public ValueTask Handle(MoneyWithdrawn notification, CancellationToken cancellationToken)
+    public async ValueTask Handle(MoneyWithdrawn notification, CancellationToken cancellationToken)
     {
         _context.Logger.LogInformation("Handling MoneyWithdrawn event");
-        _context.Logger.LogInformation($"Withdrawal data: {notification.EventData}");
+        _context.Logger.LogInformation($"Account ID: {notification.AccountId}, Amount: {notification.Amount}");
 
-        // Add your MoneyWithdrawn processing logic here
+        try
+        {
+            var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.Id == notification.AccountId, cancellationToken: cancellationToken);
 
-        return ValueTask.CompletedTask;
+            if (account == null)
+            {
+                _context.Logger.LogWarning($"Account {notification.AccountId} not found in read-side database");
+                return;
+            }
+
+            account.Balance -= notification.Amount;
+            _dbContext.Accounts.Update(account);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            _context.Logger.LogInformation($"Account {notification.AccountId} balance updated to {account.Balance} in read-side database");
+        }
+        catch (Exception ex)
+        {
+            _context.Logger.LogError($"Error handling MoneyWithdrawn event: {ex.Message}");
+            throw;
+        }
     }
 }
