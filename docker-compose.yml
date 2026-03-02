@@ -24,6 +24,8 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "4568:80"
+    volumes:
+      - ./temp/pgadmin-data:/var/lib/pgadmin
     depends_on:
       postgres:
         condition: service_healthy
@@ -34,7 +36,8 @@ services:
     working_dir: /tmp/AccountDataAccess
     entrypoint: ["/bin/sh", "-c"]
     volumes:
-      - .:/src
+      - ./AccountApi:/src/AccountApi
+      - ./AccountDataAccess:/src/AccountDataAccess
     environment:
       - CONNECTION_STRING=Host=postgres-db;Port=5432;Database=accountdb;Username=postgres;Password=postgrespwd
     depends_on:

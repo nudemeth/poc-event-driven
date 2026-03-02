@@ -2,6 +2,7 @@ using AccountDataAccess;
 using Amazon.Lambda.Core;
 using Domain.Account;
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 
 namespace AccountEventListener.EventHandlers;
 

@@ -22,8 +22,8 @@ public static class EventListenerConfigurator
         // Register the Mediator with vertical slices
         services.AddMediator(opts =>
         {
-            opts.ServiceLifetime = ServiceLifetime.Transient;
-            opts.Assemblies = [typeof(EventListenerConfigurator)];
+            opts.ServiceLifetime = ServiceLifetime.Scoped;
+            opts.Assemblies = [typeof(EventListenerConfigurator).Assembly];
         });
 
         return services;

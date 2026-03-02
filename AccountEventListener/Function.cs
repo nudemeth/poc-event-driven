@@ -20,8 +20,7 @@ var handler = async (DynamoDBEvent @event, ILambdaContext context) =>
 
     foreach (var record in @event.Records)
     {
-        context.Logger.LogInformation($"Event ID: {record.EventID}");
-        context.Logger.LogInformation($"Event Name: {record.EventName}");
+        context.Logger.LogInformation($"Received Event ID: {record.EventID}, Event Name: {record.EventName}, AWS Region: {record.AwsRegion}");
 
         var scope = serviceProvider.CreateScope();
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
@@ -49,7 +48,7 @@ var handler = async (DynamoDBEvent @event, ILambdaContext context) =>
             continue;
         }
 
-        context.Logger.LogInformation($"Publishing notification for event type: {record.EventName}");
+        context.Logger.LogInformation($"Publishing notification for event type: {notification.GetType().Name}");
         await mediator.Publish(notification);
     }
 
