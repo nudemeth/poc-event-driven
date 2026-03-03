@@ -1,5 +1,6 @@
 using AccountDataAccess;
 using Amazon.Lambda.Core;
+using Domain.Account;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,7 +15,7 @@ public static class EventListenerConfigurator
 
         // Configure PostgreSQL database context
         var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
-            ?? "Host=localhost;Port=5432;Database=accountdb;Username=postgres;Password=postgrespwd";
+            ?? "Host=postgres-db;Port=5432;Database=accountdb;Username=postgres;Password=postgrespwd";
 
         services.AddDbContext<AccountDbContext>(options =>
             options.UseNpgsql(connectionString));
@@ -23,7 +24,7 @@ public static class EventListenerConfigurator
         services.AddMediator(opts =>
         {
             opts.ServiceLifetime = ServiceLifetime.Scoped;
-            opts.Assemblies = [typeof(EventListenerConfigurator).Assembly];
+            opts.Assemblies = [typeof(EventListenerConfigurator).Assembly, typeof(AccountEntity).Assembly];
         });
 
         return services;
