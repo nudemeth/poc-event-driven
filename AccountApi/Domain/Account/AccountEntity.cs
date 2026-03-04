@@ -2,12 +2,14 @@ namespace Domain.Account;
 
 public class AccountEntity : Entity<Guid>
 {
+    private readonly List<DomainEvent> _events = [];
+
     private AccountEntity(Guid id) : base(id) { }
 
     public string AccountHolder { get; private set; } = default!;
     public decimal Balance { get; private set; }
     public bool IsActive { get; private set; }
-    public List<DomainEvent> Events { get; } = [];
+    public IReadOnlyList<DomainEvent> Events => _events;
 
     public static AccountEntity Open(string accountHolder, decimal initialDeposit)
     {
@@ -122,7 +124,7 @@ public class AccountEntity : Entity<Guid>
                 break;
         }
 
-        Events.Add(@event);
+        _events.Add(@event);
     }
 
     public static AccountEntity ReplayEvents(IEnumerable<DomainEvent> events)
