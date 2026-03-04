@@ -59,7 +59,7 @@ POST http://localhost:5015/accounts/{{accountId}}/withdraw
 content-type: application/json
 
 {
-  "amount": 200.0
+  "amount": 1000.0
 }
 
 ###

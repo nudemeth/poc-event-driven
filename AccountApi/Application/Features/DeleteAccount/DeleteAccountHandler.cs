@@ -23,6 +23,7 @@ public class DeleteAccountHandler : ICommandHandler<DeleteAccountCommand>
         try
         {
             account.Close();
+            await _accountRepository.SaveAsync(account);
             return Unit.Value;
         }
         catch (Exception ex)
