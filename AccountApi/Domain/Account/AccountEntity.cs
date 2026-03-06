@@ -24,9 +24,7 @@ public class AccountEntity : Entity<Guid>
         }
 
         var bankAccount = new AccountEntity(Guid.NewGuid());
-        var @event = new AccountOpened(bankAccount.Id, accountHolder, initialDeposit);
-
-        bankAccount.Apply(@event);
+        bankAccount.Apply(new AccountOpened(bankAccount.Id, accountHolder, initialDeposit) { Version = 1 });
 
         return bankAccount;
     }
@@ -43,7 +41,7 @@ public class AccountEntity : Entity<Guid>
             throw new ArgumentException("Deposit amount must be positive");
         }
 
-        Apply(new MoneyDeposited(Id, amount));
+        Apply(new MoneyDeposited(Id, amount) { Version = Version + 1 });
     }
 
     public void Withdraw(decimal amount)
@@ -63,7 +61,7 @@ public class AccountEntity : Entity<Guid>
             throw new InvalidOperationException("Insufficient funds");
         }
 
-        Apply(new MoneyWithdrawn(Id, amount));
+        Apply(new MoneyWithdrawn(Id, amount) { Version = Version + 1 });
     }
 
     public void Transfer(Guid toAccountId, decimal amount)
@@ -83,7 +81,7 @@ public class AccountEntity : Entity<Guid>
             throw new InvalidOperationException("Insufficient funds");
         }
 
-        Apply(new MoneyTransferred(Id, amount, toAccountId));
+        Apply(new MoneyTransferred(Id, amount, toAccountId) { Version = Version + 1 });
     }
 
     public void Close()
@@ -98,7 +96,7 @@ public class AccountEntity : Entity<Guid>
             throw new InvalidOperationException("Cannot close account with non-zero balance");
         }
 
-        Apply(new AccountClosed(Id));
+        Apply(new AccountClosed(Id) { Version = Version + 1 });
     }
 
     private void Apply(DomainEvent @event)
@@ -124,6 +122,7 @@ public class AccountEntity : Entity<Guid>
                 break;
         }
 
+        Version = @event.Version;
         _events.Add(@event);
     }
 
@@ -135,6 +134,8 @@ public class AccountEntity : Entity<Guid>
         {
             bankAccount.Apply(@event);
         }
+
+        bankAccount._events.Clear();
 
         return bankAccount;
     }

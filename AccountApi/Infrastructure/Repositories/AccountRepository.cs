@@ -17,6 +17,16 @@ public class AccountRepository : IAccountRepository
 
     public async Task SaveAsync(AccountEntity account)
     {
+        var existingAccount = await GetAccountByIdAsync(account.Id);
+        var lastStoredVersion = existingAccount?.Version ?? -1;
+        var firstNewEventVersion = account.Events.First().Version;
+
+        // Check if versions are sequential
+        if (lastStoredVersion >= 0 && lastStoredVersion != firstNewEventVersion - 1)
+        {
+            throw new ConcurrencyException($"Concurrency conflict detected for account {account.Id}. Expected version {lastStoredVersion + 1} but got {firstNewEventVersion}.");
+        }
+
         var request = new TransactWriteItemsRequest
         {
             TransactItems = account.Events
@@ -28,13 +38,24 @@ public class AccountRepository : IAccountRepository
                     Put = new Put
                     {
                         TableName = AccountTableName,
-                        Item = attributeMap
+                        Item = attributeMap,
+                        // DynamoDB will check both StreamId and Version for uniqueness even though we only specify StreamId here.
+                        // https://rory.horse/posts/dynamo-dissected-condition-expression-existence-check/
+                        // https://www.alexdebrie.com/posts/dynamodb-condition-expressions/
+                        ConditionExpression = "attribute_not_exists(StreamId)",
                     }
                 })
                 .ToList()
         };
 
-        await _dynamoDbClient.TransactWriteItemsAsync(request);
+        try
+        {
+            await _dynamoDbClient.TransactWriteItemsAsync(request);
+        }
+        catch (ConditionalCheckFailedException ex)
+        {
+            throw new ConcurrencyException($"Concurrency conflict detected for account {account.Id}. Expected version {lastStoredVersion + 1} but got {firstNewEventVersion}.", ex);
+        }
     }
 
     public async Task<AccountEntity?> GetAccountByIdAsync(Guid id)

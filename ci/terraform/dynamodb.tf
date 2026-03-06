@@ -2,7 +2,7 @@ resource "aws_dynamodb_table" "accounts" {
   name             = "Accounts"
   billing_mode     = "PAY_PER_REQUEST"
   hash_key         = "StreamId"
-  range_key        = "Timestamp"
+  range_key        = "Version"
   stream_enabled   = true
   stream_view_type = "NEW_AND_OLD_IMAGES"
 
@@ -12,7 +12,7 @@ resource "aws_dynamodb_table" "accounts" {
   }
 
   attribute {
-    name = "Timestamp"
-    type = "S"
+    name = "Version"
+    type = "N"
   }
 }
