@@ -58,7 +58,7 @@ app.MapDelete("/accounts/{id}", async ([FromRoute] Guid id, [FromServices] ISend
 app.MapGet("/accounts/{id}/replay", async ([FromRoute] Guid id, [FromServices] ISender sender) =>
 {
     var account = await sender.Send(new GetAccountQuery(id));
-    var anotherAccount = AccountEntity.ReplayEvents(account.Events);
+    var anotherAccount = AccountEntity.ReplayEvents(account.UncommittedEvents);
     return Results.Ok(anotherAccount);
 });
 

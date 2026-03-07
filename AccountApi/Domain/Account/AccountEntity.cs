@@ -2,14 +2,16 @@ namespace Domain.Account;
 
 public class AccountEntity : Entity<Guid>
 {
-    private readonly List<DomainEvent> _events = [];
+    private readonly List<DomainEvent> _committedEvents = [];
+    private readonly List<DomainEvent> _uncommittedEvents = [];
 
     private AccountEntity(Guid id) : base(id) { }
 
     public string AccountHolder { get; private set; } = default!;
     public decimal Balance { get; private set; }
     public bool IsActive { get; private set; }
-    public IReadOnlyList<DomainEvent> Events => _events;
+    public IReadOnlyList<DomainEvent> UncommittedEvents => _uncommittedEvents.AsReadOnly();
+    public IReadOnlyList<DomainEvent> CommittedEvents => _committedEvents.AsReadOnly();
 
     public static AccountEntity Open(string accountHolder, decimal initialDeposit)
     {
@@ -24,7 +26,7 @@ public class AccountEntity : Entity<Guid>
         }
 
         var bankAccount = new AccountEntity(Guid.NewGuid());
-        bankAccount.Apply(new AccountOpened(bankAccount.Id, accountHolder, initialDeposit) { Version = 1 });
+        bankAccount.ApplyUncommittedEvent(new AccountOpened(bankAccount.Id, accountHolder, initialDeposit) { Version = 1 });
 
         return bankAccount;
     }
@@ -41,7 +43,7 @@ public class AccountEntity : Entity<Guid>
             throw new ArgumentException("Deposit amount must be positive");
         }
 
-        Apply(new MoneyDeposited(Id, amount) { Version = Version + 1 });
+        ApplyUncommittedEvent(new MoneyDeposited(Id, amount) { Version = Version + 1 });
     }
 
     public void Withdraw(decimal amount)
@@ -61,7 +63,7 @@ public class AccountEntity : Entity<Guid>
             throw new InvalidOperationException("Insufficient funds");
         }
 
-        Apply(new MoneyWithdrawn(Id, amount) { Version = Version + 1 });
+        ApplyUncommittedEvent(new MoneyWithdrawn(Id, amount) { Version = Version + 1 });
     }
 
     public void Transfer(Guid toAccountId, decimal amount)
@@ -81,7 +83,7 @@ public class AccountEntity : Entity<Guid>
             throw new InvalidOperationException("Insufficient funds");
         }
 
-        Apply(new MoneyTransferred(Id, amount, toAccountId) { Version = Version + 1 });
+        ApplyUncommittedEvent(new MoneyTransferred(Id, amount, toAccountId) { Version = Version + 1 });
     }
 
     public void Close()
@@ -96,10 +98,24 @@ public class AccountEntity : Entity<Guid>
             throw new InvalidOperationException("Cannot close account with non-zero balance");
         }
 
-        Apply(new AccountClosed(Id) { Version = Version + 1 });
+        ApplyUncommittedEvent(new AccountClosed(Id) { Version = Version + 1 });
     }
 
-    private void Apply(DomainEvent @event)
+    private void ApplyUncommittedEvent(DomainEvent @event)
+    {
+        ApplyEventState(@event);
+        Version = @event.Version;
+        _uncommittedEvents.Add(@event);
+    }
+
+    private void ApplyCommittedEvent(DomainEvent @event)
+    {
+        ApplyEventState(@event);
+        Version = @event.Version;
+        _committedEvents.Add(@event);
+    }
+
+    private void ApplyEventState(DomainEvent @event)
     {
         switch (@event)
         {
@@ -121,9 +137,6 @@ public class AccountEntity : Entity<Guid>
                 IsActive = false;
                 break;
         }
-
-        Version = @event.Version;
-        _events.Add(@event);
     }
 
     public static AccountEntity ReplayEvents(IEnumerable<DomainEvent> events)
@@ -132,10 +145,8 @@ public class AccountEntity : Entity<Guid>
 
         foreach (var @event in events)
         {
-            bankAccount.Apply(@event);
+            bankAccount.ApplyCommittedEvent(@event);
         }
-
-        bankAccount._events.Clear();
 
         return bankAccount;
     }

@@ -17,19 +17,18 @@ public class AccountRepository : IAccountRepository
 
     public async Task SaveAsync(AccountEntity account)
     {
-        var existingAccount = await GetAccountByIdAsync(account.Id);
-        var lastStoredVersion = existingAccount?.Version ?? -1;
-        var firstNewEventVersion = account.Events.First().Version;
+        var lastCommittedEventVersion = account.CommittedEvents.LastOrDefault()?.Version ?? -1;
+        var firstUncommittedEventVersion = account.UncommittedEvents.First().Version;
 
         // Check if versions are sequential
-        if (lastStoredVersion >= 0 && lastStoredVersion != firstNewEventVersion - 1)
+        if (lastCommittedEventVersion >= 0 && lastCommittedEventVersion != firstUncommittedEventVersion - 1)
         {
-            throw new ConcurrencyException($"Concurrency conflict detected for account {account.Id}. Expected version {lastStoredVersion + 1} but got {firstNewEventVersion}.");
+            throw new ConcurrencyException($"Concurrency conflict detected for account {account.Id}. Expected version {lastCommittedEventVersion + 1} but got {firstUncommittedEventVersion}.");
         }
 
         var request = new TransactWriteItemsRequest
         {
-            TransactItems = account.Events
+            TransactItems = account.UncommittedEvents
                 .Select(e => JsonSerializer.Serialize(e, DomainEventJsonOptions.Instance))
                 .Select(Document.FromJson)
                 .Select(doc => doc.ToAttributeMap())
@@ -54,7 +53,7 @@ public class AccountRepository : IAccountRepository
         }
         catch (ConditionalCheckFailedException ex)
         {
-            throw new ConcurrencyException($"Concurrency conflict detected for account {account.Id}. Expected version {lastStoredVersion + 1} but got {firstNewEventVersion}.", ex);
+            throw new ConcurrencyException($"Concurrency conflict detected for account {account.Id}. Expected version {lastCommittedEventVersion + 1} but got {firstUncommittedEventVersion}.", ex);
         }
     }
 
