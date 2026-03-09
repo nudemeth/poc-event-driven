@@ -50,8 +50,9 @@ public class AccountRepository : IAccountRepository
         try
         {
             await _dynamoDbClient.TransactWriteItemsAsync(request);
+            account.CommitEvents();
         }
-        catch (ConditionalCheckFailedException ex)
+        catch (TransactionCanceledException ex) when (ex.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
         {
             throw new ConcurrencyException($"Concurrency conflict detected for account {account.Id}. Expected version {lastCommittedEventVersion + 1} but got {firstUncommittedEventVersion}.", ex);
         }

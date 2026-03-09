@@ -1,5 +1,10 @@
+using Domain;
+
 public abstract class Entity<TId> : IEquatable<Entity<TId>> where TId : notnull
 {
+    private readonly List<DomainEvent> _committedEvents = [];
+    private readonly List<DomainEvent> _uncommittedEvents = [];
+
     protected Entity(TId id)
     {
         Id = id;
@@ -8,6 +13,30 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>> where TId : notnull
 
     public TId Id { get; }
     public int Version { get; protected set; }
+    public IReadOnlyList<DomainEvent> UncommittedEvents => _uncommittedEvents.AsReadOnly();
+    public IReadOnlyList<DomainEvent> CommittedEvents => _committedEvents.AsReadOnly();
+
+    protected void ApplyUncommittedEvent(DomainEvent @event)
+    {
+        ApplyEventState(@event);
+        Version = @event.Version;
+        _uncommittedEvents.Add(@event);
+    }
+
+    protected void ApplyCommittedEvent(DomainEvent @event)
+    {
+        ApplyEventState(@event);
+        Version = @event.Version;
+        _committedEvents.Add(@event);
+    }
+
+    protected abstract void ApplyEventState(DomainEvent @event);
+
+    public void CommitEvents()
+    {
+        _committedEvents.AddRange(_uncommittedEvents);
+        _uncommittedEvents.Clear();
+    }
 
     public override bool Equals(object? obj)
     {

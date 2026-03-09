@@ -2,16 +2,11 @@ namespace Domain.Account;
 
 public class AccountEntity : Entity<Guid>
 {
-    private readonly List<DomainEvent> _committedEvents = [];
-    private readonly List<DomainEvent> _uncommittedEvents = [];
-
     private AccountEntity(Guid id) : base(id) { }
 
     public string AccountHolder { get; private set; } = default!;
     public decimal Balance { get; private set; }
     public bool IsActive { get; private set; }
-    public IReadOnlyList<DomainEvent> UncommittedEvents => _uncommittedEvents.AsReadOnly();
-    public IReadOnlyList<DomainEvent> CommittedEvents => _committedEvents.AsReadOnly();
 
     public static AccountEntity Open(string accountHolder, decimal initialDeposit)
     {
@@ -101,21 +96,7 @@ public class AccountEntity : Entity<Guid>
         ApplyUncommittedEvent(new AccountClosed(Id) { Version = Version + 1 });
     }
 
-    private void ApplyUncommittedEvent(DomainEvent @event)
-    {
-        ApplyEventState(@event);
-        Version = @event.Version;
-        _uncommittedEvents.Add(@event);
-    }
-
-    private void ApplyCommittedEvent(DomainEvent @event)
-    {
-        ApplyEventState(@event);
-        Version = @event.Version;
-        _committedEvents.Add(@event);
-    }
-
-    private void ApplyEventState(DomainEvent @event)
+    protected override void ApplyEventState(DomainEvent @event)
     {
         switch (@event)
         {
