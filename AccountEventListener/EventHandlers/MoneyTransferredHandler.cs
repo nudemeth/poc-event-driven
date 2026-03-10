@@ -52,6 +52,11 @@ public class MoneyTransferredHandler : INotificationHandler<MoneyTransferred>
 
             _context.Logger.LogInformation($"Transfer completed: {notification.AccountId} -> {notification.ToAccountId}, Amount: {notification.Amount}");
         }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _context.Logger.LogError($"Concurrency conflict when updating projection for account {notification.AccountId}: {ex.Message}");
+            throw;
+        }
         catch (Exception ex)
         {
             _context.Logger.LogError($"Error handling MoneyTransferred event: {ex.Message}");

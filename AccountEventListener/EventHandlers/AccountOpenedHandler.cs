@@ -2,6 +2,7 @@ using AccountDataAccess;
 using Amazon.Lambda.Core;
 using Domain.Account;
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 
 namespace AccountEventListener.EventHandlers;
 
@@ -29,7 +30,8 @@ public class AccountOpenedHandler : INotificationHandler<AccountOpened>
                 Id = notification.AccountId,
                 AccountHolder = notification.AccountHolder,
                 Balance = notification.InitialDeposit,
-                IsActive = true
+                IsActive = true,
+                Version = 0
             };
 
             _dbContext.Accounts.Add(account);

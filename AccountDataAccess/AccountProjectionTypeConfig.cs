@@ -21,5 +21,8 @@ public class AccountProjectionTypeConfig : IEntityTypeConfiguration<AccountProje
 
         builder.Property(a => a.IsActive)
             .HasDefaultValue(true);
+
+        builder.Property(a => a.Version)
+            .IsConcurrencyToken();
     }
 }

@@ -37,6 +37,11 @@ public class AccountClosedHandler : INotificationHandler<AccountClosed>
 
             _context.Logger.LogInformation($"Account {notification.AccountId} marked as closed in read-side database");
         }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _context.Logger.LogError($"Concurrency conflict when updating projection for account {notification.AccountId}: {ex.Message}");
+            throw;
+        }
         catch (Exception ex)
         {
             _context.Logger.LogError($"Error handling AccountClosed event: {ex.Message}");

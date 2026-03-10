@@ -21,7 +21,7 @@ public class AccountEntity : Entity<Guid>
         }
 
         var bankAccount = new AccountEntity(Guid.NewGuid());
-        bankAccount.ApplyUncommittedEvent(new AccountOpened(bankAccount.Id, accountHolder, initialDeposit) { Version = 1 });
+        bankAccount.ApplyUncommittedEvent(new AccountOpened(bankAccount.Id, accountHolder, initialDeposit) { Version = 0 });
 
         return bankAccount;
     }

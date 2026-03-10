@@ -38,6 +38,11 @@ public class MoneyWithdrawnHandler : INotificationHandler<MoneyWithdrawn>
 
             _context.Logger.LogInformation($"Account {notification.AccountId} balance updated to {account.Balance} in read-side database");
         }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _context.Logger.LogError($"Concurrency conflict when updating projection for account {notification.AccountId}: {ex.Message}");
+            throw;
+        }
         catch (Exception ex)
         {
             _context.Logger.LogError($"Error handling MoneyWithdrawn event: {ex.Message}");
