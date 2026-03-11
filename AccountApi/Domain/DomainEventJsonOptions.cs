@@ -32,7 +32,8 @@ public static class DomainEventJsonOptions
                         new JsonDerivedType(typeof(AccountOpened), nameof(AccountOpened)),
                         new JsonDerivedType(typeof(AccountClosed), nameof(AccountClosed)),
                         new JsonDerivedType(typeof(MoneyDeposited), nameof(MoneyDeposited)),
-                        new JsonDerivedType(typeof(MoneyTransferred), nameof(MoneyTransferred)),
+                        new JsonDerivedType(typeof(MoneyTransferredOut), nameof(MoneyTransferredOut)),
+                        new JsonDerivedType(typeof(MoneyTransferredIn), nameof(MoneyTransferredIn)),
                         new JsonDerivedType(typeof(MoneyWithdrawn), nameof(MoneyWithdrawn))
                     }
                 };

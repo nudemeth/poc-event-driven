@@ -14,7 +14,8 @@ public static class EventTypeFactory
             AccountClosed accountClosedEvent => accountClosedEvent,
             MoneyDeposited moneyDepositedEvent => moneyDepositedEvent,
             MoneyWithdrawn moneyWithdrawnEvent => moneyWithdrawnEvent,
-            MoneyTransferred moneyTransferredEvent => moneyTransferredEvent,
+            MoneyTransferredOut moneyTransferredOutEvent => moneyTransferredOutEvent,
+            MoneyTransferredIn moneyTransferredInEvent => moneyTransferredInEvent,
             _ => null
         };
     }

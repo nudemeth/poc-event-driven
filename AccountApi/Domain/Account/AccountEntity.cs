@@ -61,7 +61,7 @@ public class AccountEntity : Entity<Guid>
         ApplyUncommittedEvent(new MoneyWithdrawn(Id, amount) { Version = Version + 1 });
     }
 
-    public void Transfer(Guid toAccountId, decimal amount)
+    public void TransferOut(Guid toAccountId, decimal amount)
     {
         if (!IsActive)
         {
@@ -78,7 +78,22 @@ public class AccountEntity : Entity<Guid>
             throw new InvalidOperationException("Insufficient funds");
         }
 
-        ApplyUncommittedEvent(new MoneyTransferred(Id, amount, toAccountId) { Version = Version + 1 });
+        ApplyUncommittedEvent(new MoneyTransferredOut(Id, amount, toAccountId) { Version = Version + 1 });
+    }
+
+    public void TransferIn(Guid fromAccountId, decimal amount)
+    {
+        if (!IsActive)
+        {
+            throw new InvalidOperationException("Account is closed");
+        }
+
+        if (amount <= 0)
+        {
+            throw new ArgumentException("Transfer amount must be positive");
+        }
+
+        ApplyUncommittedEvent(new MoneyTransferredIn(Id, fromAccountId, amount) { Version = Version + 1 });
     }
 
     public void Close()
@@ -111,8 +126,11 @@ public class AccountEntity : Entity<Guid>
             case MoneyWithdrawn e:
                 Balance -= e.Amount;
                 break;
-            case MoneyTransferred e:
+            case MoneyTransferredOut e:
                 Balance -= e.Amount;
+                break;
+            case MoneyTransferredIn e:
+                Balance += e.Amount;
                 break;
             case AccountClosed e:
                 IsActive = false;

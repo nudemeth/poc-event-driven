@@ -33,6 +33,7 @@ public class MoneyDepositedHandler : INotificationHandler<MoneyDeposited>
             }
 
             account.Balance += notification.Amount;
+            account.Version = notification.Version;
             _dbContext.Accounts.Update(account);
             await _dbContext.SaveChangesAsync(cancellationToken);
 

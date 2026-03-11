@@ -32,6 +32,7 @@ public class AccountClosedHandler : INotificationHandler<AccountClosed>
             }
 
             account.IsActive = false;
+            account.Version = notification.Version;
             _dbContext.Accounts.Update(account);
             await _dbContext.SaveChangesAsync(cancellationToken);
 

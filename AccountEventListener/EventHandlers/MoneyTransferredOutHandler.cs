@@ -6,21 +6,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AccountEventListener.EventHandlers;
 
-public class MoneyTransferredHandler : INotificationHandler<MoneyTransferred>
+public class MoneyTransferredOutHandler : INotificationHandler<MoneyTransferredOut>
 {
     private readonly ILambdaContext _context;
     private readonly AccountDbContext _dbContext;
 
-    public MoneyTransferredHandler(ILambdaContext context, AccountDbContext dbContext)
+    public MoneyTransferredOutHandler(ILambdaContext context, AccountDbContext dbContext)
     {
         _context = context;
         _dbContext = dbContext;
     }
 
-    public async ValueTask Handle(MoneyTransferred notification, CancellationToken cancellationToken)
+    public async ValueTask Handle(MoneyTransferredOut notification, CancellationToken cancellationToken)
     {
-        _context.Logger.LogInformation("Handling MoneyTransferred event");
-        _context.Logger.LogInformation($"From Account ID: {notification.AccountId}, To Account ID: {notification.ToAccountId}, Amount: {notification.Amount}");
+        _context.Logger.LogInformation("Handling MoneyTransferredOut event");
+        _context.Logger.LogInformation($"Source Account ID: {notification.AccountId}, Target Account ID: {notification.ToAccountId}, Amount: {notification.Amount}");
 
         try
         {
@@ -34,23 +34,12 @@ public class MoneyTransferredHandler : INotificationHandler<MoneyTransferred>
             }
 
             sourceAccount.Balance -= notification.Amount;
+            sourceAccount.Version = notification.Version;
             _dbContext.Accounts.Update(sourceAccount);
-
-            // Update target account
-            var targetAccount = await _dbContext.Accounts.FindAsync(new object[] { notification.ToAccountId }, cancellationToken: cancellationToken);
-
-            if (targetAccount == null)
-            {
-                _context.Logger.LogWarning($"Target account {notification.ToAccountId} not found in read-side database");
-                return;
-            }
-
-            targetAccount.Balance += notification.Amount;
-            _dbContext.Accounts.Update(targetAccount);
 
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            _context.Logger.LogInformation($"Transfer completed: {notification.AccountId} -> {notification.ToAccountId}, Amount: {notification.Amount}");
+            _context.Logger.LogInformation($"Transfer out completed: {notification.AccountId}, Amount: {notification.Amount}");
         }
         catch (DbUpdateConcurrencyException ex)
         {
@@ -59,7 +48,7 @@ public class MoneyTransferredHandler : INotificationHandler<MoneyTransferred>
         }
         catch (Exception ex)
         {
-            _context.Logger.LogError($"Error handling MoneyTransferred event: {ex.Message}");
+            _context.Logger.LogError($"Error handling MoneyTransferredOut event: {ex.Message}");
             throw;
         }
     }
