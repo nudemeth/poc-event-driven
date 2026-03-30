@@ -19,6 +19,7 @@ public static class DomainEventJsonOptions
         {
             var jsonTypeInfo = base.GetTypeInfo(type, options);
             var domainEventType = typeof(DomainEvent);
+            var snapshotType = typeof(Snapshot);
 
             if (jsonTypeInfo.Type == domainEventType)
             {
@@ -35,6 +36,20 @@ public static class DomainEventJsonOptions
                         new JsonDerivedType(typeof(MoneyTransferredOut), nameof(MoneyTransferredOut)),
                         new JsonDerivedType(typeof(MoneyTransferredIn), nameof(MoneyTransferredIn)),
                         new JsonDerivedType(typeof(MoneyWithdrawn), nameof(MoneyWithdrawn))
+                    }
+                };
+            }
+
+            if (jsonTypeInfo.Type == snapshotType)
+            {
+                jsonTypeInfo.PolymorphismOptions = new JsonPolymorphismOptions
+                {
+                    TypeDiscriminatorPropertyName = "EventType",
+                    IgnoreUnrecognizedTypeDiscriminators = true,
+                    UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FailSerialization,
+                    DerivedTypes =
+                    {
+                        new JsonDerivedType(typeof(AccountSnapshot), nameof(AccountSnapshot))
                     }
                 };
             }

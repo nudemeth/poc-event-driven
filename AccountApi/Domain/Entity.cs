@@ -38,6 +38,8 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>> where TId : notnull
         _uncommittedEvents.Clear();
     }
 
+    public abstract Snapshot CreateSnapshot();
+
     public override bool Equals(object? obj)
     {
         return obj is Entity<TId> entity && Id.Equals(entity.Id);

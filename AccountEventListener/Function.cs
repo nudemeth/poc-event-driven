@@ -31,6 +31,23 @@ var handler = async (DynamoDBEvent @event, ILambdaContext context) =>
             continue;
         }
 
+        record.Dynamodb.NewImage.TryGetValue("EventType", out var eventTypeAttribute);
+        var eventType = eventTypeAttribute?.S;
+
+        if (string.IsNullOrWhiteSpace(eventType))
+        {
+            context.Logger.LogWarning($"EventType attribute not found in DynamoDB record for event ID: {record.EventID}");
+            continue;
+        }
+
+        context.Logger.LogInformation($"Event type extracted from DynamoDB record: {eventType}");
+
+        if (eventType.EndsWith("Snapshot"))
+        {
+            context.Logger.LogInformation($"Skipping snapshot event type: {eventType}");
+            continue;
+        }
+
         var jsonDocument = record.Dynamodb.NewImage.ToJson();
         var domainEvent = JsonSerializer.Deserialize<DomainEvent>(jsonDocument, DomainEventJsonOptions.Instance);
 

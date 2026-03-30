@@ -8,6 +8,7 @@ using Domain.Account;
 public class AccountRepository : IAccountRepository
 {
     private const string AccountTableName = "Accounts";
+    private const int SnapshotInterval = 3;
     private readonly IAmazonDynamoDB _dynamoDbClient;
 
     public AccountRepository(IAmazonDynamoDB dynamoDbClient)
@@ -29,6 +30,11 @@ public class AccountRepository : IAccountRepository
             return;
         }
 
+        var request = new TransactWriteItemsRequest
+        {
+            TransactItems = []
+        };
+
         // Validate all accounts for concurrency conflicts
         foreach (var account in accountList)
         {
@@ -46,29 +52,47 @@ public class AccountRepository : IAccountRepository
             {
                 throw new ConcurrencyException($"Concurrency conflict detected for account {account.Id}. Expected version {lastCommittedEventVersion + 1} but got {firstUncommittedEventVersion}.");
             }
-        }
 
-        var request = new TransactWriteItemsRequest
-        {
-            TransactItems = accountList
-                .SelectMany(account => account.UncommittedEvents
-                    .Select(e => JsonSerializer.Serialize(e, DomainEventJsonOptions.Instance))
-                    .Select(Document.FromJson)
-                    .Select(doc => doc.ToAttributeMap())
-                    .Select(attributeMap => new TransactWriteItem
+            // Add events to transaction
+            foreach (var e in account.UncommittedEvents)
+            {
+                var json = JsonSerializer.Serialize(e, DomainEventJsonOptions.Instance);
+                var doc = Document.FromJson(json);
+                var attributeMap = doc.ToAttributeMap();
+
+                request.TransactItems.Add(new TransactWriteItem
+                {
+                    Put = new Put
                     {
-                        Put = new Put
-                        {
-                            TableName = AccountTableName,
-                            Item = attributeMap,
-                            // DynamoDB will check both PK and SK for uniqueness even though we only specify PK here.
-                            // https://rory.horse/posts/dynamo-dissected-condition-expression-existence-check/
-                            // https://www.alexdebrie.com/posts/dynamodb-condition-expressions/
-                            ConditionExpression = "attribute_not_exists(StreamId)",
-                        }
-                    }))
-                .ToList()
-        };
+                        TableName = AccountTableName,
+                        Item = attributeMap,
+                        // DynamoDB will check both PK and SK for uniqueness even though we only specify PK here.
+                        // https://rory.horse/posts/dynamo-dissected-condition-expression-existence-check/
+                        // https://www.alexdebrie.com/posts/dynamodb-condition-expressions/
+                        ConditionExpression = "attribute_not_exists(StreamId)"
+                    }
+                });
+            }
+
+            // Create snapshot only if we cross an interval boundary
+            if (account.Version > 0 && account.Version % SnapshotInterval == 0)
+            {
+                var snapshot = account.CreateSnapshot();
+                var snapshotJson = JsonSerializer.Serialize(snapshot, DomainEventJsonOptions.Instance);
+                var snapshotDoc = Document.FromJson(snapshotJson);
+                var snapshotAttributeMap = snapshotDoc.ToAttributeMap();
+
+                request.TransactItems.Add(new TransactWriteItem
+                {
+                    Put = new Put
+                    {
+                        TableName = AccountTableName,
+                        Item = snapshotAttributeMap,
+                        ConditionExpression = "attribute_not_exists(StreamId)"
+                    }
+                });
+            }
+        }
 
         try
         {

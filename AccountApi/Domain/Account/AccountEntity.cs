@@ -21,7 +21,7 @@ public class AccountEntity : Entity<Guid>
         }
 
         var bankAccount = new AccountEntity(Guid.NewGuid());
-        bankAccount.ApplyUncommittedEvent(new AccountOpened(bankAccount.Id, accountHolder, initialDeposit) { Version = 0 });
+        bankAccount.ApplyUncommittedEvent(new AccountOpened(bankAccount.Id, accountHolder, initialDeposit) { Version = 1 });
 
         return bankAccount;
     }
@@ -143,6 +143,41 @@ public class AccountEntity : Entity<Guid>
         var bankAccount = new AccountEntity(events.First().StreamId);
 
         foreach (var @event in events)
+        {
+            bankAccount.ApplyCommittedEvent(@event);
+        }
+
+        return bankAccount;
+    }
+
+    /// <summary>
+    /// Creates a snapshot of the current entity state.
+    /// </summary>
+    public override Snapshot CreateSnapshot()
+    {
+        return new AccountSnapshot(
+            AccountId: Id,
+            Version: Version,
+            AccountHolder: AccountHolder,
+            Balance: Balance,
+            IsActive: IsActive
+        );
+    }
+
+    /// <summary>
+    /// Restores an entity from a snapshot and replays subsequent events.
+    /// </summary>
+    public static AccountEntity RestoreFromSnapshot(AccountSnapshot snapshot, IEnumerable<DomainEvent> eventsAfterSnapshot)
+    {
+        var bankAccount = new AccountEntity(snapshot.AccountId)
+        {
+            AccountHolder = snapshot.AccountHolder,
+            Balance = snapshot.Balance,
+            IsActive = snapshot.IsActive,
+            Version = snapshot.Version
+        };
+
+        foreach (var @event in eventsAfterSnapshot)
         {
             bankAccount.ApplyCommittedEvent(@event);
         }
