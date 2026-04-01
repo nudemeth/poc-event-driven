@@ -107,14 +107,64 @@ public class AccountRepository : IAccountRepository
 
     public async Task<AccountEntity?> GetAccountByIdAsync(Guid id)
     {
+        var snapshot = await GetAccountSnapshotAsync(id);
+
+        if (snapshot == null)
+        {
+            var events = await GetEventsAfterVersionAsync(id, 0);
+            return AccountEntity.ReplayEvents(events);
+        }
+
+        var eventsAfterSnapshot = await GetEventsAfterVersionAsync(id, snapshot.Version);
+
+        if (eventsAfterSnapshot.Count == 0)
+        {
+            return AccountEntity.RestoreFromSnapshot(snapshot, []);
+        }
+
+        return AccountEntity.RestoreFromSnapshot(snapshot, eventsAfterSnapshot);
+    }
+
+    private async Task<IList<DomainEvent>> GetEventsAfterVersionAsync(Guid id, int version)
+    {
+        var request = new QueryRequest
+        {
+            TableName = AccountTableName,
+            KeyConditionExpression = "StreamId = :v_StreamId AND Version > :v_Version",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":v_StreamId", new AttributeValue { S = id.ToString() } },
+                { ":v_Version", new AttributeValue { N = version.ToString() } }
+            }
+        };
+        var response = await _dynamoDbClient.QueryAsync(request);
+
+        if (response.Count == 0)
+        {
+            return [];
+        }
+
+        var events = response.Items
+            .Select(Document.FromAttributeMap)
+            .Select(doc => doc.ToJson())
+            .Select(json => JsonSerializer.Deserialize<DomainEvent>(json, DomainEventJsonOptions.Instance)!)
+            .ToList();
+
+        return events;
+    }
+
+    private async Task<AccountSnapshot?> GetAccountSnapshotAsync(Guid id)
+    {
         var request = new QueryRequest
         {
             TableName = AccountTableName,
             KeyConditionExpression = "StreamId = :v_StreamId",
             ExpressionAttributeValues = new Dictionary<string, AttributeValue>
             {
-                { ":v_StreamId", new AttributeValue { S = id.ToString() } }
-            }
+                { ":v_StreamId", new AttributeValue { S = $"{id}-Snapshot" } }
+            },
+            ScanIndexForward = false, // Get the latest snapshot first
+            Limit = 1
         };
         var response = await _dynamoDbClient.QueryAsync(request);
 
@@ -123,12 +173,10 @@ public class AccountRepository : IAccountRepository
             return null;
         }
 
-        var events = response.Items
-            .Select(Document.FromAttributeMap)
-            .Select(doc => doc.ToJson())
-            .Select(json => JsonSerializer.Deserialize<DomainEvent>(json, DomainEventJsonOptions.Instance)!);
-        var account = AccountEntity.ReplayEvents(events);
+        var snapshotDoc = Document.FromAttributeMap(response.Items[0]);
+        var snapshotJson = snapshotDoc.ToJson();
+        var snapshot = JsonSerializer.Deserialize<Snapshot>(snapshotJson, DomainEventJsonOptions.Instance)!;
 
-        return account;
+        return snapshot as AccountSnapshot;
     }
 }

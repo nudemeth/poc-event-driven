@@ -31,8 +31,7 @@ var handler = async (DynamoDBEvent @event, ILambdaContext context) =>
             continue;
         }
 
-        record.Dynamodb.NewImage.TryGetValue("EventType", out var eventTypeAttribute);
-        var eventType = eventTypeAttribute?.S;
+        var eventType = record.Dynamodb.NewImage.GetValueOrDefault("EventType")?.S;
 
         if (string.IsNullOrWhiteSpace(eventType))
         {
