@@ -1,11 +1,14 @@
 using Microsoft.Extensions.DependencyInjection;
 using Domain.Account;
+using AccountDataAccess;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace Application;
 
 public static class ApplicationConfigurator
 {
-    public static void ConfigureApplicationServices(this IServiceCollection services)
+    public static void ConfigureApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<TransferService>();
 
@@ -14,5 +17,7 @@ public static class ApplicationConfigurator
             opts.ServiceLifetime = ServiceLifetime.Scoped;
             opts.Assemblies = [typeof(ApplicationConfigurator)];
         });
+
+        services.ConfigureAccountDataAccessServices(configuration);
     }
 }

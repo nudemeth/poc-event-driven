@@ -1,5 +1,6 @@
 using Application;
 using Application.Features;
+using Application.Features.RebuildAccountsProjections;
 using Api.Requests;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,7 @@ using Domain.Account;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.ConfigureApplicationServices();
+builder.Services.ConfigureApplicationServices(builder.Configuration);
 builder.Services.ConfigureInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
@@ -60,6 +61,12 @@ app.MapGet("/accounts/{id}/replay", async ([FromRoute] Guid id, [FromServices] I
     var account = await sender.Send(new GetAccountQuery(id));
     var anotherAccount = AccountEntity.ReplayEvents(account.UncommittedEvents);
     return Results.Ok(anotherAccount);
+});
+
+app.MapPost("/accounts/{id}/rebuild-projections", async ([FromRoute] Guid id, [FromServices] ISender sender) =>
+{
+    await sender.Send(new RebuildAccountsProjectionsCommand([id]));
+    return Results.Ok();
 });
 
 app.Run();

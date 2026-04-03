@@ -68,3 +68,7 @@ DELETE http://localhost:5015/accounts/{{accountId}}
 ###
 
 GET http://localhost:5015/accounts/{{accountId}}
+
+###
+
+POST http://localhost:5015/accounts/{{accountId}}/rebuild-projections

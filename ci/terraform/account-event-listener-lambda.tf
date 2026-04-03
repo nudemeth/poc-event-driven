@@ -6,10 +6,19 @@ resource "aws_lambda_function" "account_event_listener" {
   filename         = "./AccountEventListener.zip"
   source_code_hash = filebase64sha256("./AccountEventListener.zip")
   publish          = true
+  environment {
+    variables = {
+      "CONNECTION_STRING" = var.connection_string
+    }
+  }
 }
 
 resource "aws_lambda_event_source_mapping" "dynamodb_to_lambda" {
   event_source_arn  = aws_dynamodb_table.accounts.stream_arn
   function_name     = aws_lambda_function.account_event_listener.arn
   starting_position = "LATEST"
+}
+
+variable "connection_string" {
+  type = string
 }

@@ -78,6 +78,7 @@ services:
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_DEFAULT_REGION=us-east-1
+      - TF_VAR_connection_string=Host=postgres-db;Port=5432;Database=accountdb;Username=postgres;Password=postgrespwd
     depends_on:
       localstack:
         condition: service_healthy
