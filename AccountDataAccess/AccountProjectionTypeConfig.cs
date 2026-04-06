@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AccountDataAccess;
 
-public class AccountProjectionTypeConfig : IEntityTypeConfiguration<AccountProjection>
+public class AccountProjectionTypeConfig : IEntityTypeConfiguration<AccountSummaryProjection>
 {
-    public void Configure(EntityTypeBuilder<AccountProjection> builder)
+    public void Configure(EntityTypeBuilder<AccountSummaryProjection> builder)
     {
-        builder.ToTable("AccountProjections");
+        builder.ToTable("AccountSummaryProjections");
 
         builder.HasKey(a => a.Id);
 

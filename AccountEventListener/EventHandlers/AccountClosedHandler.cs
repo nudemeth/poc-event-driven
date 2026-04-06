@@ -24,7 +24,7 @@ public class AccountClosedHandler : INotificationHandler<AccountClosed>
 
         try
         {
-            var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.Id == notification.AccountId, cancellationToken: cancellationToken);
+            var account = await _dbContext.AccountSummaryProjections.FirstOrDefaultAsync(a => a.Id == notification.AccountId, cancellationToken: cancellationToken);
             if (account == null)
             {
                 _context.Logger.LogWarning($"Account {notification.AccountId} not found in read-side database");
@@ -33,7 +33,7 @@ public class AccountClosedHandler : INotificationHandler<AccountClosed>
 
             account.IsActive = false;
             account.Version = notification.Version;
-            _dbContext.Accounts.Update(account);
+            _dbContext.AccountSummaryProjections.Update(account);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
             _context.Logger.LogInformation($"Account {notification.AccountId} marked as closed in read-side database");

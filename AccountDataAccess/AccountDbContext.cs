@@ -8,7 +8,7 @@ public class AccountDbContext : DbContext
     {
     }
 
-    public DbSet<AccountProjection> Accounts { get; set; }
+    public DbSet<AccountSummaryProjection> AccountSummaryProjections { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,6 +1,6 @@
 namespace AccountDataAccess;
 
-public class AccountProjection
+public class AccountSummaryProjection
 {
     public required Guid Id { get; set; }
     public required string AccountHolder { get; set; }

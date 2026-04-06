@@ -24,7 +24,7 @@ public class MoneyDepositedHandler : INotificationHandler<MoneyDeposited>
 
         try
         {
-            var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.Id == notification.AccountId, cancellationToken: cancellationToken);
+            var account = await _dbContext.AccountSummaryProjections.FirstOrDefaultAsync(a => a.Id == notification.AccountId, cancellationToken: cancellationToken);
 
             if (account == null)
             {
@@ -34,7 +34,7 @@ public class MoneyDepositedHandler : INotificationHandler<MoneyDeposited>
 
             account.Balance += notification.Amount;
             account.Version = notification.Version;
-            _dbContext.Accounts.Update(account);
+            _dbContext.AccountSummaryProjections.Update(account);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
             _context.Logger.LogInformation($"Account {notification.AccountId} balance updated to {account.Balance} in read-side database");

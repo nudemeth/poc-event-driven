@@ -33,7 +33,7 @@ public class RebuildAccountsProjectionsHandler : ICommandHandler<RebuildAccounts
                 continue; // Account not found, skip to next
             }
 
-            var projection = new AccountProjection
+            var projection = new AccountSummaryProjection
             {
                 Id = account.Id,
                 AccountHolder = account.AccountHolder,
@@ -42,14 +42,14 @@ public class RebuildAccountsProjectionsHandler : ICommandHandler<RebuildAccounts
                 Version = account.Version
             };
 
-            var existingProjection = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.Id == account.Id);
+            var existingProjection = await _dbContext.AccountSummaryProjections.FirstOrDefaultAsync(a => a.Id == account.Id);
 
             if (existingProjection != null)
             {
-                _dbContext.Accounts.Remove(existingProjection);
+                _dbContext.AccountSummaryProjections.Remove(existingProjection);
             }
 
-            await _dbContext.Accounts.AddAsync(projection);
+            await _dbContext.AccountSummaryProjections.AddAsync(projection);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 

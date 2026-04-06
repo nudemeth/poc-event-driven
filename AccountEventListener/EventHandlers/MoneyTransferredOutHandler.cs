@@ -25,7 +25,7 @@ public class MoneyTransferredOutHandler : INotificationHandler<MoneyTransferredO
         try
         {
             // Update source account
-            var sourceAccount = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.Id == notification.AccountId, cancellationToken: cancellationToken);
+            var sourceAccount = await _dbContext.AccountSummaryProjections.FirstOrDefaultAsync(a => a.Id == notification.AccountId, cancellationToken: cancellationToken);
 
             if (sourceAccount == null)
             {
@@ -35,7 +35,7 @@ public class MoneyTransferredOutHandler : INotificationHandler<MoneyTransferredO
 
             sourceAccount.Balance -= notification.Amount;
             sourceAccount.Version = notification.Version;
-            _dbContext.Accounts.Update(sourceAccount);
+            _dbContext.AccountSummaryProjections.Update(sourceAccount);
 
             await _dbContext.SaveChangesAsync(cancellationToken);
 

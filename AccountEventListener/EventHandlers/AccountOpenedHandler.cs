@@ -25,7 +25,7 @@ public class AccountOpenedHandler : INotificationHandler<AccountOpened>
         try
         {
             // Create new account entity for read-side projection
-            var account = new AccountProjection
+            var account = new AccountSummaryProjection
             {
                 Id = notification.AccountId,
                 AccountHolder = notification.AccountHolder,
@@ -34,7 +34,7 @@ public class AccountOpenedHandler : INotificationHandler<AccountOpened>
                 Version = 0
             };
 
-            _dbContext.Accounts.Add(account);
+            _dbContext.AccountSummaryProjections.Add(account);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
             _context.Logger.LogInformation($"Account {notification.AccountId} projection created in read-side database");
