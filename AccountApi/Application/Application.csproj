@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\AccountDataAccess\AccountDataAccess.csproj" />
+    <ProjectReference Include="..\..\AccountProjection\AccountProjection.csproj" />
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 

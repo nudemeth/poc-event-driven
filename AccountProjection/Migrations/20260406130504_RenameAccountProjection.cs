@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace AccountDataAccess.Migrations
+namespace AccountProjection.Migrations
 {
     /// <inheritdoc />
     public partial class RenameAccountProjection : Migration

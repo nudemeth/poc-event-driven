@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace AccountDataAccess.Migrations
+namespace AccountProjection.Migrations
 {
     /// <inheritdoc />
     public partial class AddVersion : Migration

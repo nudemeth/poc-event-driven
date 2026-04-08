@@ -1,4 +1,4 @@
-using AccountDataAccess;
+using AccountProjection;
 using Amazon.Lambda.Core;
 using Domain.Account;
 using Mediator;
@@ -9,9 +9,9 @@ namespace AccountEventListener.EventHandlers;
 public class MoneyTransferredInHandler : INotificationHandler<MoneyTransferredIn>
 {
     private readonly ILambdaContext _context;
-    private readonly AccountDbContext _dbContext;
+    private readonly AccountProjectionDbContext _dbContext;
 
-    public MoneyTransferredInHandler(ILambdaContext context, AccountDbContext dbContext)
+    public MoneyTransferredInHandler(ILambdaContext context, AccountProjectionDbContext dbContext)
     {
         _context = context;
         _dbContext = dbContext;

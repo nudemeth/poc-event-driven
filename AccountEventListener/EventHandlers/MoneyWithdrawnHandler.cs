@@ -1,4 +1,4 @@
-using AccountDataAccess;
+using AccountProjection;
 using Amazon.Lambda.Core;
 using Domain.Account;
 using Mediator;
@@ -9,9 +9,9 @@ namespace AccountEventListener.EventHandlers;
 public class MoneyWithdrawnHandler : INotificationHandler<MoneyWithdrawn>
 {
     private readonly ILambdaContext _context;
-    private readonly AccountDbContext _dbContext;
+    private readonly AccountProjectionDbContext _dbContext;
 
-    public MoneyWithdrawnHandler(ILambdaContext context, AccountDbContext dbContext)
+    public MoneyWithdrawnHandler(ILambdaContext context, AccountProjectionDbContext dbContext)
     {
         _context = context;
         _dbContext = dbContext;

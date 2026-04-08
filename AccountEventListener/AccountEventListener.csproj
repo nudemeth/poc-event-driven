@@ -23,6 +23,6 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AccountDataAccess\AccountDataAccess.csproj" />
+    <ProjectReference Include="..\AccountProjection\AccountProjection.csproj" />
   </ItemGroup>
 </Project>

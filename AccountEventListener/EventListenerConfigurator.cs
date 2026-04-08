@@ -1,4 +1,4 @@
-using AccountDataAccess;
+using AccountProjection;
 using Amazon.Lambda.Core;
 using Domain.Account;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +20,7 @@ public static class EventListenerConfigurator
             opts.Assemblies = [typeof(EventListenerConfigurator).Assembly, typeof(AccountEntity).Assembly];
         });
 
-        services.ConfigureAccountDataAccessServices();
+        services.ConfigureAccountProjectionServices();
 
         return services;
     }

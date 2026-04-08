@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AccountProjection;
 
-public class AccountDbContext : DbContext
+public class AccountProjectionDbContext : DbContext
 {
-    public AccountDbContext(DbContextOptions<AccountDbContext> options) : base(options)
+    public AccountProjectionDbContext(DbContextOptions<AccountProjectionDbContext> options) : base(options)
     {
     }
 

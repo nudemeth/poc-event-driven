@@ -1,4 +1,4 @@
-using AccountDataAccess;
+using AccountProjection;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,9 +7,9 @@ namespace Application.Features.RebuildAccountsProjections;
 public class RebuildAccountsProjectionsHandler : ICommandHandler<RebuildAccountsProjectionsCommand>
 {
     private readonly IAccountRepository _accountRepository;
-    private readonly AccountDbContext _dbContext;
+    private readonly AccountProjectionDbContext _dbContext;
 
-    public RebuildAccountsProjectionsHandler(IAccountRepository accountRepository, AccountDbContext dbContext)
+    public RebuildAccountsProjectionsHandler(IAccountRepository accountRepository, AccountProjectionDbContext dbContext)
     {
         _accountRepository = accountRepository;
         _dbContext = dbContext;

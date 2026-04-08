@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Domain.Account;
-using AccountDataAccess;
+using AccountProjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -18,6 +18,6 @@ public static class ApplicationConfigurator
             opts.Assemblies = [typeof(ApplicationConfigurator)];
         });
 
-        services.ConfigureAccountDataAccessServices(configuration);
+        services.ConfigureAccountProjectionServices(configuration);
     }
 }

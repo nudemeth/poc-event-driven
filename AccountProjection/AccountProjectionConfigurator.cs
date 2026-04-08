@@ -11,7 +11,7 @@ public static class AccountProjectionConfigurator
         var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") ??
             configuration?.GetConnectionString("DefaultConnection");
 
-        services.AddDbContext<AccountDbContext>(options =>
+        services.AddDbContext<AccountProjectionDbContext>(options =>
             options.UseNpgsql(connectionString));
     }
 }

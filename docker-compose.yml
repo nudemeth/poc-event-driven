@@ -33,11 +33,11 @@ services:
   ef-migrations:
     image: mcr.microsoft.com/dotnet/sdk:10.0
     container_name: ef-migrations
-    working_dir: /tmp/AccountDataAccess
+    working_dir: /tmp/AccountProjection
     entrypoint: ["/bin/sh", "-c"]
     volumes:
       - ./AccountApi:/src/AccountApi
-      - ./AccountDataAccess:/src/AccountDataAccess
+      - ./AccountProjection:/src/AccountProjection
     environment:
       - CONNECTION_STRING=Host=postgres-db;Port=5432;Database=accountdb;Username=postgres;Password=postgrespwd
     depends_on:
