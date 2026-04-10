@@ -142,7 +142,7 @@ public class AccountRepository : IAccountRepository
         {
             Put = new Put
             {
-                TableName = "Outbox",
+                TableName = "AccountsOutbox",
                 Item = attributeMap,
             }
         };
