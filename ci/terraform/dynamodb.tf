@@ -20,7 +20,7 @@ resource "aws_dynamodb_table" "accounts" {
 resource "aws_dynamodb_table" "outbox" {
   name         = "AccountsOutbox"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "OutboxId"
+  hash_key     = "MessageId"
   range_key    = "CreatedAt"
 
   ttl {
@@ -29,7 +29,7 @@ resource "aws_dynamodb_table" "outbox" {
   }
 
   attribute {
-    name = "OutboxId"
+    name = "MessageId"
     type = "S"
   }
 

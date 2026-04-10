@@ -127,7 +127,7 @@ public class AccountRepository : IAccountRepository
     {
         var outbox = new
         {
-            OutboxId = Guid.NewGuid().ToString(),
+            MessageId = Guid.NewGuid().ToString(),
             CreatedAt = DateTimeOffset.UtcNow.ToString(),
             EventType = @event.GetType().Name,
             EventData = JsonSerializer.Serialize(@event, DomainEventJsonOptions.Instance),
