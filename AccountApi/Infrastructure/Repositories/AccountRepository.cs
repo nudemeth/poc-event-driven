@@ -54,43 +54,17 @@ public class AccountRepository : IAccountRepository
             }
 
             // Add events to transaction
-            foreach (var e in account.UncommittedEvents)
+            foreach (var uncommittedEvent in account.UncommittedEvents)
             {
-                var json = JsonSerializer.Serialize(e, DomainEventJsonOptions.Instance);
-                var doc = Document.FromJson(json);
-                var attributeMap = doc.ToAttributeMap();
-
-                request.TransactItems.Add(new TransactWriteItem
-                {
-                    Put = new Put
-                    {
-                        TableName = AccountTableName,
-                        Item = attributeMap,
-                        // DynamoDB will check both PK and SK for uniqueness even though we only specify PK here.
-                        // https://rory.horse/posts/dynamo-dissected-condition-expression-existence-check/
-                        // https://www.alexdebrie.com/posts/dynamodb-condition-expressions/
-                        ConditionExpression = "attribute_not_exists(StreamId)"
-                    }
-                });
+                request.TransactItems.Add(BuildEventTransactionItem(uncommittedEvent));
+                request.TransactItems.Add(BuildOutboxTransactionItem(uncommittedEvent));
             }
 
-            // Create snapshot only if we cross an interval boundary
-            if (account.Version > 0 && account.Version % SnapshotInterval == 0)
+            // Add snapshot to transaction if needed
+            var snapshotItem = BuildSnapshotTransactionItem(account);
+            if (snapshotItem != null)
             {
-                var snapshot = account.CreateSnapshot();
-                var snapshotJson = JsonSerializer.Serialize(snapshot, DomainEventJsonOptions.Instance);
-                var snapshotDoc = Document.FromJson(snapshotJson);
-                var snapshotAttributeMap = snapshotDoc.ToAttributeMap();
-
-                request.TransactItems.Add(new TransactWriteItem
-                {
-                    Put = new Put
-                    {
-                        TableName = AccountTableName,
-                        Item = snapshotAttributeMap,
-                        ConditionExpression = "attribute_not_exists(StreamId)"
-                    }
-                });
+                request.TransactItems.Add(snapshotItem);
             }
         }
 
@@ -103,6 +77,75 @@ public class AccountRepository : IAccountRepository
         {
             throw new ConcurrencyException($"Concurrency conflict detected. One or more accounts have conflicting versions.", ex);
         }
+    }
+
+    private TransactWriteItem BuildEventTransactionItem(DomainEvent @event)
+    {
+        var json = JsonSerializer.Serialize(@event, DomainEventJsonOptions.Instance);
+        var doc = Document.FromJson(json);
+        var attributeMap = doc.ToAttributeMap();
+
+        return new TransactWriteItem
+        {
+            Put = new Put
+            {
+                TableName = AccountTableName,
+                Item = attributeMap,
+                // DynamoDB will check both PK and SK for uniqueness even though we only specify PK here.
+                // https://rory.horse/posts/dynamo-dissected-condition-expression-existence-check/
+                // https://www.alexdebrie.com/posts/dynamodb-condition-expressions/
+                ConditionExpression = "attribute_not_exists(StreamId)"
+            }
+        };
+    }
+
+    private TransactWriteItem? BuildSnapshotTransactionItem(AccountEntity account)
+    {
+        // Create snapshot only if we cross an interval boundary
+        if (account.Version <= 0 || account.Version % SnapshotInterval != 0)
+        {
+            return null;
+        }
+
+        var snapshot = account.CreateSnapshot();
+        var snapshotJson = JsonSerializer.Serialize(snapshot, DomainEventJsonOptions.Instance);
+        var snapshotDoc = Document.FromJson(snapshotJson);
+        var snapshotAttributeMap = snapshotDoc.ToAttributeMap();
+
+        return new TransactWriteItem
+        {
+            Put = new Put
+            {
+                TableName = AccountTableName,
+                Item = snapshotAttributeMap,
+                ConditionExpression = "attribute_not_exists(StreamId)"
+            }
+        };
+    }
+
+    private TransactWriteItem BuildOutboxTransactionItem(DomainEvent @event)
+    {
+        var outbox = new
+        {
+            OutboxId = Guid.NewGuid().ToString(),
+            CreatedAt = DateTimeOffset.UtcNow.ToString(),
+            EventType = @event.GetType().Name,
+            EventData = JsonSerializer.Serialize(@event, DomainEventJsonOptions.Instance),
+            PublishedAt = null as DateTimeOffset?,
+            ExpiresAt = null as DateTimeOffset?
+        };
+        var json = JsonSerializer.Serialize(outbox);
+        var doc = Document.FromJson(json);
+        var attributeMap = doc.ToAttributeMap();
+
+        return new TransactWriteItem
+        {
+            Put = new Put
+            {
+                TableName = "Outbox",
+                Item = attributeMap,
+            }
+        };
     }
 
     public async Task<AccountEntity?> GetAccountByIdAsync(Guid id)

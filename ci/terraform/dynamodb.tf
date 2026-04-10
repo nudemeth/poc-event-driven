@@ -16,3 +16,25 @@ resource "aws_dynamodb_table" "accounts" {
     type = "N"
   }
 }
+
+resource "aws_dynamodb_table" "outbox" {
+  name         = "Outbox"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "OutboxId"
+  range_key    = "CreatedAt"
+
+  ttl {
+    attribute_name = "ExpiresAt"
+    enabled        = true
+  }
+
+  attribute {
+    name = "OutboxId"
+    type = "S"
+  }
+
+  attribute {
+    name = "CreatedAt"
+    type = "S"
+  }
+}
