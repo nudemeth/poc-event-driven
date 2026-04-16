@@ -132,7 +132,7 @@ public class AccountRepository : IAccountRepository
             EventType = @event.GetType().Name,
             EventData = JsonSerializer.Serialize(@event, DomainEventJsonOptions.Instance),
             PublishedAt = null as DateTimeOffset?,
-            ExpiresAt = null as DateTimeOffset?
+            ExpiresAt = null as long?
         };
         var json = JsonSerializer.Serialize(outbox);
         var doc = Document.FromJson(json);
