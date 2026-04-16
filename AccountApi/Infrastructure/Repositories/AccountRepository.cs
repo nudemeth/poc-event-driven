@@ -127,11 +127,12 @@ public class AccountRepository : IAccountRepository
     {
         var outbox = new
         {
+            IsPublished = 0, // Use 0/1 for boolean because DynamoDB does not support boolean on keys
+            CreatedAt = DateTime.UtcNow.ToString("o"),
             MessageId = Guid.NewGuid().ToString(),
-            CreatedAt = DateTimeOffset.UtcNow.ToString(),
             EventType = @event.GetType().Name,
             EventData = JsonSerializer.Serialize(@event, DomainEventJsonOptions.Instance),
-            PublishedAt = null as DateTimeOffset?,
+            PublishedAt = null as DateTime?,
             ExpiresAt = null as long?
         };
         var json = JsonSerializer.Serialize(outbox);

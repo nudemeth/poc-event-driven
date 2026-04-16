@@ -20,7 +20,7 @@ resource "aws_dynamodb_table" "accounts" {
 resource "aws_dynamodb_table" "outbox" {
   name         = "AccountsOutbox"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "MessageId"
+  hash_key     = "IsPublished"
   range_key    = "CreatedAt"
 
   ttl {
@@ -29,8 +29,8 @@ resource "aws_dynamodb_table" "outbox" {
   }
 
   attribute {
-    name = "MessageId"
-    type = "S"
+    name = "IsPublished"
+    type = "N" // Use 0/1 for boolean because DynamoDB does not support boolean on keys
   }
 
   attribute {
