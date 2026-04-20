@@ -9,3 +9,9 @@ variable "environment" {
   type        = string
   default     = "dev"
 }
+
+variable "outbox_publisher_schedule" {
+  description = "Schedule expression for the Outbox Publisher Lambda (e.g., 'rate(5 minutes)')"
+  type        = string
+  default     = "rate(5 minutes)"
+}

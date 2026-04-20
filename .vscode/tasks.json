@@ -19,6 +19,25 @@
         "panel": "new"
       },
       "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "publish AccountOutboxPublisher",
+      "options": {
+        "cwd": "${workspaceFolder}/AccountOutboxPublisher"
+      },
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "lambda",
+        "package",
+        "--output-package",
+        "${workspaceFolder}/ci/terraform/AccountOutboxPublisher.zip"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": "$msCompile"
     }
   ]
 }
