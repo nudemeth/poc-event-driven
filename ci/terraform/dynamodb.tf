@@ -20,7 +20,7 @@ resource "aws_dynamodb_table" "accounts" {
 resource "aws_dynamodb_table" "outbox" {
   name         = "AccountsOutbox"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "IsPublished"
+  hash_key     = "AccountId"
   range_key    = "CreatedAt"
 
   ttl {
@@ -29,12 +29,30 @@ resource "aws_dynamodb_table" "outbox" {
   }
 
   attribute {
-    name = "IsPublished"
-    type = "N" // Use 0/1 for boolean because DynamoDB does not support boolean on keys
+    name = "AccountId"
+    type = "S"
   }
 
   attribute {
     name = "CreatedAt"
     type = "S"
+  }
+
+  attribute {
+    name = "IsPublished"
+    type = "N" // Use 0/1 for boolean because DynamoDB does not support boolean on keys
+  }
+
+  global_secondary_index {
+    name            = "IsPublished-CreatedAt-Index"
+    projection_type = "ALL"
+    key_schema {
+      attribute_name = "IsPublished"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "CreatedAt"
+      key_type       = "RANGE"
+    }
   }
 }

@@ -1,65 +1,7 @@
-# IAM Role for AccountOutboxPublisher Lambda
-resource "aws_iam_role" "account_outbox_publisher_role" {
-  name = "account-outbox-publisher-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-# IAM Policy for DynamoDB access (read from outbox table, update for marking as published)
-resource "aws_iam_role_policy" "outbox_publisher_dynamodb_policy" {
-  name = "account-outbox-publisher-dynamodb-policy"
-  role = aws_iam_role.account_outbox_publisher_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "dynamodb:Scan",
-          "dynamodb:UpdateItem"
-        ]
-        Resource = aws_dynamodb_table.outbox.arn
-      }
-    ]
-  })
-}
-
-# IAM Policy for SNS publish
-resource "aws_iam_role_policy" "outbox_publisher_sns_policy" {
-  name = "account-outbox-publisher-sns-policy"
-  role = aws_iam_role.account_outbox_publisher_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "sns:Publish",
-          "sns:ListTopics"
-        ]
-        Resource = aws_sns_topic.account_events.arn
-      }
-    ]
-  })
-}
-
 # Lambda Function for Account Outbox Publisher
 resource "aws_lambda_function" "account_outbox_publisher" {
   function_name    = "account-outbox-publisher"
-  role             = aws_iam_role.account_outbox_publisher_role.arn
+  role             = "arn:aws:iam::000000000000:role/account-outbox-publisher-role"
   handler          = "AccountOutboxPublisher"
   runtime          = "dotnet10"
   filename         = "./AccountOutboxPublisher.zip"

@@ -6,17 +6,19 @@ using Amazon.DynamoDBv2.Model;
 namespace AccountOutboxPublisher;
 
 public record OutboxItem(
+    string AccountId,
     string MessageId,
     string EventType,
     string EventData,
     string CreatedAt,
-    bool IsPublished)
+    int IsPublished)
 {
 }
 
 public class OutboxRepository
 {
     private const string OutboxTableName = "AccountsOutbox";
+    private const string IsPublishedGSIName = "IsPublished-CreatedAt-Index";
     private readonly IAmazonDynamoDB _dynamoDbClient;
 
     public OutboxRepository(IAmazonDynamoDB dynamoDbClient)
@@ -29,6 +31,7 @@ public class OutboxRepository
         var request = new QueryRequest
         {
             TableName = OutboxTableName,
+            IndexName = IsPublishedGSIName,
             KeyConditionExpression = "IsPublished = :v_IsPublished",
             ExpressionAttributeValues = new Dictionary<string, AttributeValue>
             {
@@ -52,7 +55,7 @@ public class OutboxRepository
         return items;
     }
 
-    public async Task MarkAsPublishedAsync(string messageId)
+    public async Task MarkAsPublishedAsync(OutboxItem item)
     {
         var publishedAt = DateTime.UtcNow;
         var expiresAt = publishedAt.AddDays(90); // Set TTL to 90 days
@@ -63,7 +66,8 @@ public class OutboxRepository
             TableName = OutboxTableName,
             Key = new Dictionary<string, AttributeValue>
             {
-                { "MessageId", new AttributeValue { S = messageId } }
+                { "AccountId", new AttributeValue { S = item.AccountId } },
+                { "CreatedAt", new AttributeValue { S = item.CreatedAt } }
             },
             UpdateExpression = "SET IsPublished = :v_IsPublished, PublishedAt = :v_PublishedAt, ExpiresAt = :v_ExpiresAt",
             ExpressionAttributeValues = new Dictionary<string, AttributeValue>

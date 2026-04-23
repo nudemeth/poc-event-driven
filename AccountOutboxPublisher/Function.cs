@@ -2,6 +2,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.DependencyInjection;
 using AccountOutboxPublisher;
 
@@ -11,10 +12,11 @@ var handler = async (object? input, ILambdaContext context) =>
     // Configure dependency injection
     var configuration = new ConfigurationBuilder()
         .AddEnvironmentVariables()
+        .AddJsonFile("appsettings.json", optional: true)
         .Build();
 
     var services = new ServiceCollection()
-        .ConfigureOutboxPublisherServices(configuration);
+        .ConfigureOutboxPublisherServices(configuration, context);
 
     var serviceProvider = services.BuildServiceProvider();
 

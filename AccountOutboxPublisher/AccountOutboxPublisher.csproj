@@ -21,10 +21,16 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AccountApi\Domain\Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
