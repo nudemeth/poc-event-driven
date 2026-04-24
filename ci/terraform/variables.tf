@@ -11,7 +11,7 @@ variable "environment" {
 }
 
 variable "outbox_publisher_schedule" {
-  description = "Schedule expression for the Outbox Publisher Lambda (e.g., 'rate(1 minutes)')"
+  description = "Schedule expression for the Outbox Publisher Lambda (e.g., 'rate(1 minute)')"
   type        = string
-  default     = "rate(1 minutes)"
+  default     = "rate(1 minute)"
 }
