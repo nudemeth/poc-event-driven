@@ -11,7 +11,9 @@ public record OutboxItem(
     string EventType,
     string EventData,
     string CreatedAt,
-    int IsPublished)
+    int IsPublished,
+    string? PublishedAt,
+    long? ExpiresAt)
 {
 }
 
@@ -55,29 +57,15 @@ public class OutboxRepository
         return items;
     }
 
-    public async Task MarkAsPublishedAsync(OutboxItem item)
+    public async Task SaveAsync(OutboxItem item)
     {
-        var publishedAt = DateTime.UtcNow;
-        var expiresAt = publishedAt.AddDays(90); // Set TTL to 90 days
-        var expiresAtUnixTimestamp = ((DateTimeOffset)expiresAt).ToUnixTimeSeconds();
-
-        var updateRequest = new UpdateItemRequest
+        var doc = Document.FromJson(JsonSerializer.Serialize(item));
+        var putRequest = new PutItemRequest
         {
             TableName = OutboxTableName,
-            Key = new Dictionary<string, AttributeValue>
-            {
-                { "AccountId", new AttributeValue { S = item.AccountId } },
-                { "CreatedAt", new AttributeValue { S = item.CreatedAt } }
-            },
-            UpdateExpression = "SET IsPublished = :v_IsPublished, PublishedAt = :v_PublishedAt, ExpiresAt = :v_ExpiresAt",
-            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-            {
-                { ":v_IsPublished", new AttributeValue { N = "1" } },
-                { ":v_PublishedAt", new AttributeValue { S = publishedAt.ToString("o") } },
-                { ":v_ExpiresAt", new AttributeValue { N = expiresAtUnixTimestamp.ToString() } }
-            }
+            Item = doc.ToAttributeMap()
         };
 
-        await _dynamoDbClient.UpdateItemAsync(updateRequest);
+        await _dynamoDbClient.PutItemAsync(putRequest);
     }
 }

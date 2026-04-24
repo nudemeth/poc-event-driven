@@ -50,7 +50,16 @@ public class OutboxPublisher
 
                 _context.Logger.LogInformation($"Successfully published message {item.MessageId}.");
 
-                await _outboxRepository.MarkAsPublishedAsync(item);
+                var publishedAt = DateTime.UtcNow;
+                var expiresAt = ((DateTimeOffset)publishedAt).AddDays(90).ToUnixTimeSeconds();
+                var publishedItem = item with
+                {
+                    IsPublished = 1,
+                    PublishedAt = publishedAt.ToString("o"),
+                    ExpiresAt = expiresAt
+                };
+
+                await _outboxRepository.SaveAsync(publishedItem);
 
                 _context.Logger.LogInformation($"Marked message {item.MessageId} as published.");
             }
