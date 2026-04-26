@@ -13,10 +13,20 @@ resource "aws_lambda_function" "account_event_listener" {
   }
 }
 
-resource "aws_lambda_event_source_mapping" "dynamodb_to_lambda" {
-  event_source_arn  = aws_dynamodb_table.accounts.stream_arn
-  function_name     = aws_lambda_function.account_event_listener.arn
-  starting_position = "LATEST"
+# SNS subscription to trigger Lambda
+resource "aws_sns_topic_subscription" "account_event_listener_subscription" {
+  topic_arn = aws_sns_topic.account_events.arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.account_event_listener.arn
+}
+
+# Lambda permission for SNS to invoke
+resource "aws_lambda_permission" "account_event_listener_sns_invoke" {
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.account_event_listener.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = aws_sns_topic.account_events.arn
 }
 
 variable "connection_string" {

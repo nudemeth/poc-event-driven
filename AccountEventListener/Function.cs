@@ -1,5 +1,5 @@
 using Amazon.Lambda.Core;
-using Amazon.Lambda.DynamoDBEvents;
+using Amazon.Lambda.SNSEvents;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,50 +9,39 @@ using System.Text.Json;
 using Domain;
 
 // The function handler that will be called for each Lambda event
-var handler = async (DynamoDBEvent @event, ILambdaContext context) =>
+var handler = async (SNSEvent @event, ILambdaContext context) =>
 {
     // Configure dependency injection
     var services = new ServiceCollection()
         .ConfigureEventListenerServices(context);
     var serviceProvider = services.BuildServiceProvider();
 
-    context.Logger.LogInformation("Processing DynamoDB event with the following records:");
+    context.Logger.LogInformation("Processing SNS event with the following records:");
 
     foreach (var record in @event.Records)
     {
-        context.Logger.LogInformation($"Received Event ID: {record.EventID}, Event Name: {record.EventName}, AWS Region: {record.AwsRegion}");
+        context.Logger.LogInformation($"Received Message ID: {record.Sns.MessageId}, Subject: {record.Sns.Subject}");
 
         var scope = serviceProvider.CreateScope();
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-        if (record.Dynamodb?.NewImage == null)
-        {
-            context.Logger.LogWarning($"No NewImage found for event ID: {record.EventID}");
-            continue;
-        }
-
-        var eventType = record.Dynamodb.NewImage.GetValueOrDefault("EventType")?.S;
+        // Extract EventType from message attributes
+        var eventType = GetMessageAttribute(record.Sns.MessageAttributes, "EventType");
 
         if (string.IsNullOrWhiteSpace(eventType))
         {
-            context.Logger.LogWarning($"EventType attribute not found in DynamoDB record for event ID: {record.EventID}");
+            context.Logger.LogWarning($"EventType attribute not found in SNS message ID: {record.Sns.MessageId}");
             continue;
         }
 
-        context.Logger.LogInformation($"Event type extracted from DynamoDB record: {eventType}");
+        context.Logger.LogInformation($"Event type extracted from SNS message: {eventType}");
 
-        if (eventType.EndsWith("Snapshot"))
-        {
-            context.Logger.LogInformation($"Skipping snapshot event type: {eventType}");
-            continue;
-        }
-
-        var jsonDocument = record.Dynamodb.NewImage.ToJson();
-        var domainEvent = JsonSerializer.Deserialize<DomainEvent>(jsonDocument, DomainEventJsonOptions.Instance);
+        // Parse domain event from SNS message body
+        var domainEvent = JsonSerializer.Deserialize<DomainEvent>(record.Sns.Message, DomainEventJsonOptions.Instance);
 
         if (domainEvent == null)
         {
-            context.Logger.LogWarning($"Failed to deserialize event data for event ID: {record.EventID}");
+            context.Logger.LogWarning($"Failed to deserialize event data from SNS message ID: {record.Sns.MessageId}");
             continue;
         }
 
@@ -60,7 +49,7 @@ var handler = async (DynamoDBEvent @event, ILambdaContext context) =>
 
         if (notification == null)
         {
-            context.Logger.LogWarning($"No handler found for event type: {record.EventName}");
+            context.Logger.LogWarning($"No handler found for event type: {eventType}");
             continue;
         }
 
@@ -68,8 +57,14 @@ var handler = async (DynamoDBEvent @event, ILambdaContext context) =>
         await mediator.Publish(notification);
     }
 
-    context.Logger.LogInformation("DynamoDB event processing complete.");
+    context.Logger.LogInformation("SNS event processing complete.");
 };
+
+// Helper method to extract message attribute value
+static string? GetMessageAttribute(IDictionary<string, SNSEvent.MessageAttribute> attributes, string key)
+{
+    return attributes.TryGetValue(key, out var attribute) ? attribute.Value : null;
+}
 
 // Build the Lambda runtime client passing in the handler to call for each
 // event and the JSON serializer to use for translating Lambda JSON documents
