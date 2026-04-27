@@ -1,6 +1,8 @@
-# SNS Topic for Account Events
+# SNS Topic for Account Events (FIFO to ensure message ordering)
 resource "aws_sns_topic" "account_events" {
-  name = "account-events-sns"
+  name                        = "account-events-sns.fifo"
+  fifo_topic                  = true
+  content_based_deduplication = true
 }
 
 # SNS Topic Policy to allow Lambda to publish

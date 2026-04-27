@@ -13,20 +13,21 @@ resource "aws_lambda_function" "account_event_listener" {
   }
 }
 
-# SNS subscription to trigger Lambda
-resource "aws_sns_topic_subscription" "account_event_listener_subscription" {
-  topic_arn = aws_sns_topic.account_events.arn
-  protocol  = "lambda"
-  endpoint  = aws_lambda_function.account_event_listener.arn
+# SQS as event source for Lambda (maintains FIFO ordering)
+resource "aws_lambda_event_source_mapping" "account_event_listener_sqs" {
+  event_source_arn  = aws_sqs_queue.account_events_queue.arn
+  function_name     = aws_lambda_function.account_event_listener.function_name
+  batch_size        = 1  # Process one message at a time to maintain ordering
+  function_response_types = ["ReportBatchItemFailures"]
 }
 
-# Lambda permission for SNS to invoke
-resource "aws_lambda_permission" "account_event_listener_sns_invoke" {
-  statement_id  = "AllowExecutionFromSNS"
+# Lambda permission for SQS to invoke
+resource "aws_lambda_permission" "account_event_listener_sqs_invoke" {
+  statement_id  = "AllowExecutionFromSQS"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.account_event_listener.function_name
-  principal     = "sns.amazonaws.com"
-  source_arn    = aws_sns_topic.account_events.arn
+  principal     = "sqs.amazonaws.com"
+  source_arn    = aws_sqs_queue.account_events_queue.arn
 }
 
 variable "connection_string" {

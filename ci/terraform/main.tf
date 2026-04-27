@@ -19,6 +19,7 @@ provider "aws" {
     dynamodb = "http://localstack:4566"
     lambda   = "http://localstack:4566"
     sns      = "http://localstack:4566"
+    sqs      = "http://localstack:4566"
     events   = "http://localstack:4566"
   }
 }

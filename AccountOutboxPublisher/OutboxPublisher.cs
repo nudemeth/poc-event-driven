@@ -82,6 +82,10 @@ public class OutboxPublisher
             TopicArn = topicArn,
             Subject = $"Domain Event: {item.EventType}",
             Message = item.EventData,
+            // Use AccountId as MessageGroupId to ensure events for the same account are ordered
+            MessageGroupId = item.AccountId,
+            // Use MessageId as deduplication ID to prevent duplicate messages
+            MessageDeduplicationId = item.MessageId,
             MessageAttributes = new Dictionary<string, MessageAttributeValue>
             {
                 {

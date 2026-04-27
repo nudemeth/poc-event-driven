@@ -23,6 +23,16 @@ output "sns_topic_arn" {
   description = "The ARN of the SNS topic for account events"
 }
 
+output "account_events_queue_arn" {
+  value       = aws_sqs_queue.account_events_queue.arn
+  description = "ARN of the account events SQS FIFO queue"
+}
+
+output "account_events_queue_url" {
+  value       = aws_sqs_queue.account_events_queue.url
+  description = "URL of the account events SQS FIFO queue"
+}
+
 output "account_outbox_publisher_lambda_arn" {
   value       = aws_lambda_function.account_outbox_publisher.arn
   description = "The ARN of the Account Outbox Publisher Lambda function"

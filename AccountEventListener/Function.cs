@@ -1,5 +1,5 @@
 using Amazon.Lambda.Core;
-using Amazon.Lambda.SNSEvents;
+using Amazon.Lambda.SQSEvents;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,62 +9,67 @@ using System.Text.Json;
 using Domain;
 
 // The function handler that will be called for each Lambda event
-var handler = async (SNSEvent @event, ILambdaContext context) =>
+var handler = async (SQSEvent @event, ILambdaContext context) =>
 {
     // Configure dependency injection
     var services = new ServiceCollection()
         .ConfigureEventListenerServices(context);
     var serviceProvider = services.BuildServiceProvider();
 
-    context.Logger.LogInformation("Processing SNS event with the following records:");
+    context.Logger.LogInformation("Processing SQS event with the following records:");
+
+    var failedMessageIds = new List<string>();
 
     foreach (var record in @event.Records)
     {
-        context.Logger.LogInformation($"Received Message ID: {record.Sns.MessageId}, Subject: {record.Sns.Subject}");
-
-        var scope = serviceProvider.CreateScope();
-        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
-        // Extract EventType from message attributes
-        var eventType = GetMessageAttribute(record.Sns.MessageAttributes, "EventType");
-
-        if (string.IsNullOrWhiteSpace(eventType))
+        try
         {
-            context.Logger.LogWarning($"EventType attribute not found in SNS message ID: {record.Sns.MessageId}");
-            continue;
+            context.Logger.LogInformation($"Processing SQS Message ID: {record.MessageId}");
+
+            var scope = serviceProvider.CreateScope();
+            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+            // Parse domain event directly from SQS body (raw SNS message delivery)
+            var domainEvent = JsonSerializer.Deserialize<DomainEvent>(record.Body, DomainEventJsonOptions.Instance);
+
+            if (domainEvent == null)
+            {
+                context.Logger.LogWarning($"Failed to deserialize domain event from SQS message ID: {record.MessageId}");
+                failedMessageIds.Add(record.MessageId);
+                continue;
+            }
+
+            var notification = EventTypeFactory.CreateNotification(domainEvent);
+
+            if (notification == null)
+            {
+                context.Logger.LogWarning($"No handler found for event type: {domainEvent.GetType().Name}");
+                failedMessageIds.Add(record.MessageId);
+                continue;
+            }
+
+            context.Logger.LogInformation($"Publishing notification for event type: {notification.GetType().Name}");
+            await mediator.Publish(notification);
+
+            context.Logger.LogInformation($"Successfully processed SQS message ID: {record.MessageId}");
         }
-
-        context.Logger.LogInformation($"Event type extracted from SNS message: {eventType}");
-
-        // Parse domain event from SNS message body
-        var domainEvent = JsonSerializer.Deserialize<DomainEvent>(record.Sns.Message, DomainEventJsonOptions.Instance);
-
-        if (domainEvent == null)
+        catch (Exception ex)
         {
-            context.Logger.LogWarning($"Failed to deserialize event data from SNS message ID: {record.Sns.MessageId}");
-            continue;
+            context.Logger.LogError($"Error processing SQS message ID {record.MessageId}: {ex.Message}");
+            failedMessageIds.Add(record.MessageId);
         }
-
-        var notification = EventTypeFactory.CreateNotification(domainEvent);
-
-        if (notification == null)
-        {
-            context.Logger.LogWarning($"No handler found for event type: {eventType}");
-            continue;
-        }
-
-        context.Logger.LogInformation($"Publishing notification for event type: {notification.GetType().Name}");
-        await mediator.Publish(notification);
     }
 
-    context.Logger.LogInformation("SNS event processing complete.");
-};
+    context.Logger.LogInformation("SQS event processing complete.");
 
-// Helper method to extract message attribute value
-static string? GetMessageAttribute(IDictionary<string, SNSEvent.MessageAttribute> attributes, string key)
-{
-    return attributes.TryGetValue(key, out var attribute) ? attribute.Value : null;
-}
+    // Return failed message IDs so SQS will retry them
+    return new SQSBatchResponse
+    {
+        BatchItemFailures = failedMessageIds
+            .Select(id => new SQSBatchResponse.BatchItemFailure { ItemIdentifier = id })
+            .ToList()
+    };
+};
 
 // Build the Lambda runtime client passing in the handler to call for each
 // event and the JSON serializer to use for translating Lambda JSON documents
