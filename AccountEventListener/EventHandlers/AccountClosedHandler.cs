@@ -31,6 +31,11 @@ public class AccountClosedHandler : INotificationHandler<AccountClosed>
                 return;
             }
 
+            if (notification.Version != account.Version + 1)
+            {
+                throw new InvalidOperationException($"Out-of-order event: expected version {account.Version + 1} but got {notification.Version} for account {notification.AccountId}");
+            }
+
             account.IsActive = false;
             account.Version = notification.Version;
             _dbContext.AccountSummaryProjections.Update(account);

@@ -33,6 +33,11 @@ public class MoneyTransferredOutHandler : INotificationHandler<MoneyTransferredO
                 return;
             }
 
+            if (notification.Version != sourceAccount.Version + 1)
+            {
+                throw new InvalidOperationException($"Out-of-order event: expected version {sourceAccount.Version + 1} but got {notification.Version} for account {notification.AccountId}");
+            }
+
             sourceAccount.Balance -= notification.Amount;
             sourceAccount.Version = notification.Version;
             _dbContext.AccountSummaryProjections.Update(sourceAccount);
