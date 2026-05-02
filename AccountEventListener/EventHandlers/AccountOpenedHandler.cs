@@ -31,7 +31,7 @@ public class AccountOpenedHandler : INotificationHandler<AccountOpened>
                 AccountHolder = notification.AccountHolder,
                 Balance = notification.InitialDeposit,
                 IsActive = true,
-                Version = 0
+                Version = notification.Version,
             };
 
             _dbContext.AccountSummaryProjections.Add(account);
