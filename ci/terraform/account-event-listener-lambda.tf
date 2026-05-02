@@ -6,6 +6,7 @@ resource "aws_lambda_function" "account_event_listener" {
   filename         = "./AccountEventListener.zip"
   source_code_hash = filebase64sha256("./AccountEventListener.zip")
   publish          = true
+  timeout          = 30
   environment {
     variables = {
       "CONNECTION_STRING" = var.connection_string

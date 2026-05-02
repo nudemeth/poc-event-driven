@@ -1,3 +1,11 @@
+# SQS FIFO Dead Letter Queue for unprocessable Account Events
+resource "aws_sqs_queue" "account_events_dlq" {
+  name                        = "account-events-dlq.fifo"
+  fifo_queue                  = true
+  content_based_deduplication = false
+  message_retention_seconds   = 1209600 # 14 days
+}
+
 # SQS FIFO Queue for Account Events (ordered message delivery)
 resource "aws_sqs_queue" "account_events_queue" {
   name                        = "account-events-queue.fifo"
@@ -6,6 +14,13 @@ resource "aws_sqs_queue" "account_events_queue" {
   deduplication_scope         = "messageGroup"
   fifo_throughput_limit       = "perMessageGroupId"
   message_retention_seconds   = 1209600 # 14 days
+
+  visibility_timeout_seconds = 180 # 6x Lambda timeout (30s) per AWS recommendation
+
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.account_events_dlq.arn
+    maxReceiveCount     = 3
+  })
 }
 
 # SQS Queue Policy to allow SNS to send messages
