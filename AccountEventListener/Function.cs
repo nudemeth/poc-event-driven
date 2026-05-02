@@ -32,7 +32,7 @@ var handler = async (SQSEvent @event, ILambdaContext context) =>
             continue;
         }
 
-        context.Logger.LogInformation($"Processing SQS Message ID: {record.MessageId}, Message ID: {messageId}");
+        context.Logger.LogInformation($"Processing Message ID: {messageId}, SQS Message ID: {record.MessageId}");
 
         var scope = serviceProvider.CreateScope();
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
@@ -59,7 +59,7 @@ var handler = async (SQSEvent @event, ILambdaContext context) =>
 
             if (!isNew)
             {
-                context.Logger.LogWarning($"Duplicate message skipped. Outbox message ID: {messageId}, SQS message ID: {record.MessageId}");
+                context.Logger.LogWarning($"Duplicate message skipped. Message ID: {messageId}, SQS message ID: {record.MessageId}");
                 continue;
             }
 
@@ -68,11 +68,11 @@ var handler = async (SQSEvent @event, ILambdaContext context) =>
             await mediator.Publish(notification);
             await inboxRepository.MarkProcessedAsync(messageId);
 
-            context.Logger.LogInformation($"Successfully processed SQS message ID: {record.MessageId}, Message ID: {messageId}");
+            context.Logger.LogInformation($"Successfully processed Message ID: {messageId}, SQS message ID: {record.MessageId}");
         }
         catch (Exception ex)
         {
-            context.Logger.LogError($"Error processing SQS message ID {record.MessageId}, Message ID: {messageId}: {ex.Message}");
+            context.Logger.LogError($"Error processing Message ID: {messageId}, SQS message ID {record.MessageId}: {ex.Message}");
             failedMessageIds.Add(record.MessageId);
         }
     }
