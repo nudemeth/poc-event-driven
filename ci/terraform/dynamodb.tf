@@ -17,6 +17,22 @@ resource "aws_dynamodb_table" "accounts" {
   }
 }
 
+resource "aws_dynamodb_table" "inbox" {
+  name         = "AccountsInbox"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "MessageId"
+
+  ttl {
+    attribute_name = "ExpiresAt"
+    enabled        = true
+  }
+
+  attribute {
+    name = "MessageId"
+    type = "S"
+  }
+}
+
 resource "aws_dynamodb_table" "outbox" {
   name         = "AccountsOutbox"
   billing_mode = "PAY_PER_REQUEST"

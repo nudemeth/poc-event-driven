@@ -1,7 +1,9 @@
 using AccountProjection;
+using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
+using Amazon.Runtime;
 using Domain.Account;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AccountEventListener;
@@ -10,10 +12,23 @@ public static class EventListenerConfigurator
 {
     public static IServiceCollection ConfigureEventListenerServices(this IServiceCollection services, ILambdaContext context)
     {
-        // Register the Lambda context as a singleton
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+
+        var awsOptions = configuration.GetAWSOptions();
+        var credentials = new EnvironmentVariablesAWSCredentials();
+
+        var dynamoDbConfig = new AmazonDynamoDBConfig
+        {
+            ServiceURL = awsOptions.DefaultClientConfig.ServiceURL,
+            AuthenticationRegion = awsOptions.Region.SystemName
+        };
+        services.AddSingleton<IAmazonDynamoDB>(new AmazonDynamoDBClient(credentials, dynamoDbConfig));
+
         services.AddSingleton(context);
 
-        // Register the Mediator with vertical slices
         services.AddMediator(opts =>
         {
             opts.ServiceLifetime = ServiceLifetime.Scoped;
@@ -21,6 +36,7 @@ public static class EventListenerConfigurator
         });
 
         services.ConfigureAccountProjectionServices();
+        services.AddScoped<InboxRepository>();
 
         return services;
     }

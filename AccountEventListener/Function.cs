@@ -15,47 +15,64 @@ var handler = async (SQSEvent @event, ILambdaContext context) =>
     var services = new ServiceCollection()
         .ConfigureEventListenerServices(context);
     var serviceProvider = services.BuildServiceProvider();
+    var failedMessageIds = new List<string>();
 
     context.Logger.LogInformation("Processing SQS event with the following records:");
 
-    var failedMessageIds = new List<string>();
-
     foreach (var record in @event.Records)
     {
+        // Use the outbox MessageId (forwarded as an SNS message attribute) so the inbox
+        // key matches the same ID stored in AccountsOutbox, not the SQS-assigned one.
+        record.MessageAttributes.TryGetValue("MessageId", out var messageIdAttr);
+        var messageId = messageIdAttr?.StringValue;
+
+        if (string.IsNullOrEmpty(messageId))
+        {
+            context.Logger.LogWarning($"MessageId attribute is missing or empty for SQS message ID: {record.MessageId}");
+            continue;
+        }
+
+        context.Logger.LogInformation($"Processing SQS Message ID: {record.MessageId}, Message ID: {messageId}");
+
+        var scope = serviceProvider.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        var domainEvent = TryDeserialize(record.Body);
+
+        if (domainEvent == null)
+        {
+            context.Logger.LogWarning($"Failed to deserialize domain event from message ID: {messageId}");
+            continue;
+        }
+
+        var notification = EventTypeFactory.CreateNotification(domainEvent);
+
+        if (notification == null)
+        {
+            context.Logger.LogWarning($"No handler found for event type: {domainEvent.GetType().Name}");
+            continue;
+        }
+
         try
         {
-            context.Logger.LogInformation($"Processing SQS Message ID: {record.MessageId}");
+            var inboxRepository = scope.ServiceProvider.GetRequiredService<InboxRepository>();
+            var isNew = await inboxRepository.TryRecordAsync(messageId, domainEvent.GetType().Name, record.Body);
 
-            var scope = serviceProvider.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
-            // Parse domain event directly from SQS body (raw SNS message delivery)
-            var domainEvent = JsonSerializer.Deserialize<DomainEvent>(record.Body, DomainEventJsonOptions.Instance);
-
-            if (domainEvent == null)
+            if (!isNew)
             {
-                context.Logger.LogWarning($"Failed to deserialize domain event from SQS message ID: {record.MessageId}");
-                failedMessageIds.Add(record.MessageId);
-                continue;
-            }
-
-            var notification = EventTypeFactory.CreateNotification(domainEvent);
-
-            if (notification == null)
-            {
-                context.Logger.LogWarning($"No handler found for event type: {domainEvent.GetType().Name}");
-                failedMessageIds.Add(record.MessageId);
+                context.Logger.LogWarning($"Duplicate message skipped. Outbox message ID: {messageId}, SQS message ID: {record.MessageId}");
                 continue;
             }
 
             context.Logger.LogInformation($"Publishing notification for event type: {notification.GetType().Name}");
-            await mediator.Publish(notification);
 
-            context.Logger.LogInformation($"Successfully processed SQS message ID: {record.MessageId}");
+            await mediator.Publish(notification);
+            await inboxRepository.MarkProcessedAsync(messageId);
+
+            context.Logger.LogInformation($"Successfully processed SQS message ID: {record.MessageId}, Message ID: {messageId}");
         }
         catch (Exception ex)
         {
-            context.Logger.LogError($"Error processing SQS message ID {record.MessageId}: {ex.Message}");
+            context.Logger.LogError($"Error processing SQS message ID {record.MessageId}, Message ID: {messageId}: {ex.Message}");
             failedMessageIds.Add(record.MessageId);
         }
     }
@@ -77,3 +94,15 @@ var handler = async (SQSEvent @event, ILambdaContext context) =>
 await LambdaBootstrapBuilder.Create(handler, new DefaultLambdaJsonSerializer())
         .Build()
         .RunAsync();
+
+static DomainEvent? TryDeserialize(string body)
+{
+    try
+    {
+        return JsonSerializer.Deserialize<DomainEvent>(body, DomainEventJsonOptions.Instance);
+    }
+    catch
+    {
+        return null;
+    }
+}

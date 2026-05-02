@@ -9,6 +9,7 @@ resource "aws_lambda_function" "account_event_listener" {
   environment {
     variables = {
       "CONNECTION_STRING" = var.connection_string
+      "INBOX_TABLE_NAME"  = aws_dynamodb_table.inbox.name
     }
   }
 }

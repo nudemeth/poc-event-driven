@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"e:\\\\development\\\\opensource\\\\poc-event-driven\\\\AccountEventListener\\\\\" -Recurse -File | Select-Object FullName)"
+    ]
+  }
+}
