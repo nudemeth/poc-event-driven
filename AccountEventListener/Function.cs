@@ -44,9 +44,9 @@ var handler = async (SQSEvent @event, ILambdaContext context) =>
             continue;
         }
 
-        var notification = EventTypeFactory.CreateNotification(domainEvent);
+        var classifiedEvent = EventTypeFactory.Classify(domainEvent);
 
-        if (notification == null)
+        if (classifiedEvent == null)
         {
             context.Logger.LogWarning($"No handler found for event type: {domainEvent.GetType().Name}");
             continue;
@@ -63,9 +63,9 @@ var handler = async (SQSEvent @event, ILambdaContext context) =>
                 continue;
             }
 
-            context.Logger.LogInformation($"Publishing notification for event type: {notification.GetType().Name}");
+            context.Logger.LogInformation($"Publishing notification for event type: {classifiedEvent.GetType().Name}");
 
-            await mediator.Publish(notification);
+            await mediator.Publish(classifiedEvent);
             await inboxRepository.MarkProcessedAsync(messageId);
 
             context.Logger.LogInformation($"Successfully processed Message ID: {messageId}, SQS message ID: {record.MessageId}");

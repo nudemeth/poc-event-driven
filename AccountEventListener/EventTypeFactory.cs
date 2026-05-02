@@ -6,7 +6,7 @@ namespace AccountEventListener;
 
 public static class EventTypeFactory
 {
-    public static INotification? CreateNotification(DomainEvent domainEvent)
+    public static INotification? Classify(DomainEvent domainEvent)
     {
         return domainEvent switch
         {
