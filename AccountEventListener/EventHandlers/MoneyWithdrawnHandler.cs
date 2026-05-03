@@ -1,58 +1,16 @@
-using AccountProjection;
 using Amazon.Lambda.Core;
 using Domain.Account;
 using Mediator;
-using Microsoft.EntityFrameworkCore;
 
 namespace AccountEventListener.EventHandlers;
 
-public class MoneyWithdrawnHandler : INotificationHandler<MoneyWithdrawn>
+public class MoneyWithdrawnHandler(EventContext notificationContext, ILambdaContext context) : INotificationHandler<MoneyWithdrawn>
 {
-    private readonly ILambdaContext _context;
-    private readonly AccountProjectionDbContext _dbContext;
-
-    public MoneyWithdrawnHandler(ILambdaContext context, AccountProjectionDbContext dbContext)
+    public ValueTask Handle(MoneyWithdrawn notification, CancellationToken cancellationToken)
     {
-        _context = context;
-        _dbContext = dbContext;
-    }
-
-    public async ValueTask Handle(MoneyWithdrawn notification, CancellationToken cancellationToken)
-    {
-        _context.Logger.LogInformation("Handling MoneyWithdrawn event");
-        _context.Logger.LogInformation($"Account ID: {notification.AccountId}, Amount: {notification.Amount}");
-
-        try
-        {
-            var account = await _dbContext.AccountSummaryProjections.FirstOrDefaultAsync(a => a.Id == notification.AccountId, cancellationToken: cancellationToken);
-
-            if (account == null)
-            {
-                _context.Logger.LogWarning($"Account {notification.AccountId} not found in read-side database");
-                return;
-            }
-
-            if (notification.Version != account.Version + 1)
-            {
-                throw new InvalidOperationException($"Out-of-order event: expected version {account.Version + 1} but got {notification.Version} for account {notification.AccountId}");
-            }
-
-            account.Balance -= notification.Amount;
-            account.Version = notification.Version;
-            _dbContext.AccountSummaryProjections.Update(account);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-
-            _context.Logger.LogInformation($"Account {notification.AccountId} balance updated to {account.Balance} in read-side database");
-        }
-        catch (DbUpdateConcurrencyException ex)
-        {
-            _context.Logger.LogError($"Concurrency conflict when updating projection for account {notification.AccountId}: {ex.Message}");
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _context.Logger.LogError($"Error handling MoneyWithdrawn event: {ex.Message}");
-            throw;
-        }
+        context.Logger.LogInformation($"Handling Event: {typeof(MoneyWithdrawn).Name}, Account ID: {notification.AccountId}, Amount: {notification.Amount}");
+        notificationContext.Account.Balance -= notification.Amount;
+        notificationContext.Account.Version = notification.Version;
+        return ValueTask.CompletedTask;
     }
 }

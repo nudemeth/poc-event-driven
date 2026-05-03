@@ -17,9 +17,8 @@ resource "aws_lambda_function" "account_event_listener" {
 
 # SQS as event source for Lambda (maintains FIFO ordering)
 resource "aws_lambda_event_source_mapping" "account_event_listener_sqs" {
-  event_source_arn  = aws_sqs_queue.account_events_queue.arn
-  function_name     = aws_lambda_function.account_event_listener.function_name
-  batch_size        = 1  # Process one message at a time to maintain ordering
+  event_source_arn        = aws_sqs_queue.account_events_queue.arn
+  function_name           = aws_lambda_function.account_event_listener.function_name
   function_response_types = ["ReportBatchItemFailures"]
 }
 

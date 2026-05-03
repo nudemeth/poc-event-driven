@@ -19,8 +19,7 @@ public class AccountOpenedHandler : INotificationHandler<AccountOpened>
 
     public async ValueTask Handle(AccountOpened notification, CancellationToken cancellationToken)
     {
-        _context.Logger.LogInformation("Handling AccountOpened event");
-        _context.Logger.LogInformation($"Account ID: {notification.AccountId}, Holder: {notification.AccountHolder}, Initial Deposit: {notification.InitialDeposit}");
+        _context.Logger.LogInformation($"Handling Event: {typeof(AccountOpened).Name}, Account ID: {notification.AccountId}, Holder: {notification.AccountHolder}, Initial Deposit: {notification.InitialDeposit}");
 
         try
         {

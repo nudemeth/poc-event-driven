@@ -1,10 +1,14 @@
 using AccountProjection;
+using AccountEventListener.EventHandlers;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using Amazon.Runtime;
+using Domain;
 using Domain.Account;
+using Mediator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Scrutor;
 
 namespace AccountEventListener;
 
@@ -32,11 +36,28 @@ public static class EventListenerConfigurator
         services.AddMediator(opts =>
         {
             opts.ServiceLifetime = ServiceLifetime.Scoped;
-            opts.Assemblies = [typeof(EventListenerConfigurator).Assembly, typeof(AccountEntity).Assembly];
+            opts.Assemblies = [typeof(AccountEntity).Assembly];
         });
 
-        services.ConfigureAccountProjectionServices();
+        services.Scan(scan => scan
+            .FromAssembliesOf(typeof(EventListenerConfigurator), typeof(AccountEntity))
+            .AddClasses(classes => classes
+                .AssignableTo(typeof(INotificationHandler<>))
+                .Where(type => !type.Name.StartsWith("AccountValidationDecorator")))
+            .UsingRegistrationStrategy(RegistrationStrategy.Append)
+            .AsImplementedInterfaces()
+            .WithScopedLifetime());
+
+        services.AddScoped<EventContext>();
         services.AddScoped<InboxRepository>();
+
+        services.Decorate<INotificationHandler<MoneyDeposited>, AccountValidationDecorator<MoneyDeposited>>();
+        services.Decorate<INotificationHandler<MoneyWithdrawn>, AccountValidationDecorator<MoneyWithdrawn>>();
+        services.Decorate<INotificationHandler<AccountClosed>, AccountValidationDecorator<AccountClosed>>();
+        services.Decorate<INotificationHandler<MoneyTransferredIn>, AccountValidationDecorator<MoneyTransferredIn>>();
+        services.Decorate<INotificationHandler<MoneyTransferredOut>, AccountValidationDecorator<MoneyTransferredOut>>();
+
+        services.ConfigureAccountProjectionServices();
 
         return services;
     }

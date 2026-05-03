@@ -72,7 +72,7 @@ var handler = async (SQSEvent @event, ILambdaContext context) =>
         }
         catch (Exception ex)
         {
-            context.Logger.LogError($"Error processing Message ID: {messageId}, SQS message ID {record.MessageId}: {ex.Message}");
+            context.Logger.LogError(ex, $"Error processing Message ID: {messageId}, SQS message ID {record.MessageId}: {ex.Message}");
             failedMessageIds.Add(record.MessageId);
         }
     }
