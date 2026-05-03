@@ -14,8 +14,7 @@ resource "aws_sqs_queue" "account_events_queue" {
   deduplication_scope         = "messageGroup"
   fifo_throughput_limit       = "perMessageGroupId"
   message_retention_seconds   = 1209600 # 14 days
-
-  visibility_timeout_seconds = 180 # 6x Lambda timeout (30s) per AWS recommendation
+  visibility_timeout_seconds  = 180     # 6x Lambda timeout (30s) per AWS recommendation
 
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.account_events_dlq.arn

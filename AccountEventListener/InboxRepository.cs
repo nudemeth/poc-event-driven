@@ -14,17 +14,19 @@ public class InboxRepository
         _tableName = Environment.GetEnvironmentVariable("INBOX_TABLE_NAME") ?? "AccountsInbox";
     }
 
-    // Returns true if the message is new and should be processed.
-    // Returns false if the message was already received (duplicate).
-    // Uses a conditional write so the check-and-insert is atomic.
-    public async Task<bool> TryRecordAsync(string messageId, string eventType, string payload, CancellationToken ct = default)
+    // Returns true if the message is new or has not yet been successfully processed (should be processed/retried).
+    // Returns false if the message was already successfully processed (duplicate).
+    // Uses conditional writes so check-and-insert is atomic.
+    // receiveCount is ApproximateReceiveCount from the SQS record (1 = first delivery, 2 = first retry, …).
+    public async Task<bool> TryRecordAsync(string messageId, string eventType, string payload, int receiveCount, CancellationToken ct = default)
     {
         var item = new Dictionary<string, AttributeValue>
         {
             ["MessageId"] = new AttributeValue { S = messageId },
             ["EventType"] = new AttributeValue { S = eventType },
             ["Payload"] = new AttributeValue { S = payload },
-            ["ReceivedAt"] = new AttributeValue { S = DateTime.UtcNow.ToString("o") }
+            ["ReceiveTimes"] = new AttributeValue { L = [new() { S = DateTime.UtcNow.ToString("o") }] },
+            ["ReceiveCount"] = new AttributeValue { N = receiveCount.ToString() }
         };
 
         try
@@ -40,7 +42,31 @@ public class InboxRepository
         }
         catch (ConditionalCheckFailedException)
         {
-            return false;
+            // Message already recorded — update receive count only if not yet processed.
+            try
+            {
+                await _dynamoDbClient.UpdateItemAsync(new UpdateItemRequest
+                {
+                    TableName = _tableName,
+                    Key = new Dictionary<string, AttributeValue>
+                    {
+                        ["MessageId"] = new AttributeValue { S = messageId }
+                    },
+                    UpdateExpression = "SET ReceiveCount = :count, ReceiveTimes = list_append(ReceiveTimes, :ts)",
+                    ConditionExpression = "attribute_not_exists(ProcessedAt)",
+                    ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                    {
+                        [":count"] = new AttributeValue { N = receiveCount.ToString() },
+                        [":ts"] = new AttributeValue { L = [new() { S = DateTime.UtcNow.ToString("o") }] }
+                    }
+                }, ct);
+
+                return true;
+            }
+            catch (ConditionalCheckFailedException)
+            {
+                return false;
+            }
         }
     }
 

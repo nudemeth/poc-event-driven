@@ -55,7 +55,9 @@ var handler = async (SQSEvent @event, ILambdaContext context) =>
         try
         {
             var inboxRepository = scope.ServiceProvider.GetRequiredService<InboxRepository>();
-            var isNew = await inboxRepository.TryRecordAsync(messageId, domainEvent.GetType().Name, record.Body);
+            record.Attributes.TryGetValue("ApproximateReceiveCount", out var receiveCountAttr);
+            var receiveCount = int.TryParse(receiveCountAttr, out var count) ? count : 1;
+            var isNew = await inboxRepository.TryRecordAsync(messageId, domainEvent.GetType().Name, record.Body, receiveCount);
 
             if (!isNew)
             {
