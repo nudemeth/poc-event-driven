@@ -43,12 +43,13 @@ public static class EventListenerConfigurator
             .FromAssembliesOf(typeof(EventListenerConfigurator), typeof(AccountEntity))
             .AddClasses(classes => classes
                 .AssignableTo(typeof(INotificationHandler<>))
-                .Where(type => !type.Name.StartsWith("AccountValidationDecorator")))
+                .Where(type => !type.Name.Contains("Decorator")))
             .UsingRegistrationStrategy(RegistrationStrategy.Append)
             .AsImplementedInterfaces()
             .WithScopedLifetime());
 
         services.AddScoped<EventContext>();
+        services.AddScoped<InboxContext>();
         services.AddScoped<InboxRepository>();
 
         services.Decorate<INotificationHandler<MoneyDeposited>, AccountValidationDecorator<MoneyDeposited>>();
@@ -56,6 +57,13 @@ public static class EventListenerConfigurator
         services.Decorate<INotificationHandler<AccountClosed>, AccountValidationDecorator<AccountClosed>>();
         services.Decorate<INotificationHandler<MoneyTransferredIn>, AccountValidationDecorator<MoneyTransferredIn>>();
         services.Decorate<INotificationHandler<MoneyTransferredOut>, AccountValidationDecorator<MoneyTransferredOut>>();
+
+        services.Decorate<INotificationHandler<AccountOpened>, InboxDecorator<AccountOpened>>();
+        services.Decorate<INotificationHandler<MoneyDeposited>, InboxDecorator<MoneyDeposited>>();
+        services.Decorate<INotificationHandler<MoneyWithdrawn>, InboxDecorator<MoneyWithdrawn>>();
+        services.Decorate<INotificationHandler<AccountClosed>, InboxDecorator<AccountClosed>>();
+        services.Decorate<INotificationHandler<MoneyTransferredIn>, InboxDecorator<MoneyTransferredIn>>();
+        services.Decorate<INotificationHandler<MoneyTransferredOut>, InboxDecorator<MoneyTransferredOut>>();
 
         services.ConfigureAccountProjectionServices();
 

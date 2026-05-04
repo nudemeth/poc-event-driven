@@ -54,21 +54,16 @@ var handler = async (SQSEvent @event, ILambdaContext context) =>
 
         try
         {
-            var inboxRepository = scope.ServiceProvider.GetRequiredService<InboxRepository>();
             record.Attributes.TryGetValue("ApproximateReceiveCount", out var receiveCountAttr);
-            var receiveCount = int.TryParse(receiveCountAttr, out var count) ? count : 1;
-            var isNew = await inboxRepository.TryRecordAsync(messageId, domainEvent.GetType().Name, record.Body, receiveCount);
 
-            if (!isNew)
-            {
-                context.Logger.LogWarning($"Duplicate message skipped. Message ID: {messageId}, SQS message ID: {record.MessageId}");
-                continue;
-            }
+            var inboxContext = scope.ServiceProvider.GetRequiredService<InboxContext>();
+            inboxContext.MessageId = messageId;
+            inboxContext.ReceiveCount = int.TryParse(receiveCountAttr, out var count) ? count : 1;
+            inboxContext.Body = record.Body;
 
             context.Logger.LogInformation($"Publishing notification for event type: {classifiedEvent.GetType().Name}");
 
             await mediator.Publish(classifiedEvent);
-            await inboxRepository.MarkProcessedAsync(messageId);
 
             context.Logger.LogInformation($"Successfully processed Message ID: {messageId}, SQS message ID: {record.MessageId}");
         }
