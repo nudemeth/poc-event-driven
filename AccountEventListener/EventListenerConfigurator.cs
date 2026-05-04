@@ -1,9 +1,8 @@
+using AccountEventListener.Decorators;
 using AccountProjection;
-using AccountEventListener.EventHandlers;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using Amazon.Runtime;
-using Domain;
 using Domain.Account;
 using Mediator;
 using Microsoft.Extensions.Configuration;
@@ -49,7 +48,6 @@ public static class EventListenerConfigurator
             .WithScopedLifetime());
 
         services.AddScoped<EventContext>();
-        services.AddScoped<InboxContext>();
         services.AddScoped<InboxRepository>();
 
         services.Decorate<INotificationHandler<MoneyDeposited>, AccountValidationDecorator<MoneyDeposited>>();

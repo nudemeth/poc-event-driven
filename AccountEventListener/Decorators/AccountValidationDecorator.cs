@@ -4,7 +4,7 @@ using Domain;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 
-namespace AccountEventListener.EventHandlers;
+namespace AccountEventListener.Decorators;
 
 public class AccountValidationDecorator<TNotification>(
     INotificationHandler<TNotification> inner,

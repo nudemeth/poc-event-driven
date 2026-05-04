@@ -56,15 +56,13 @@ var handler = async (SQSEvent @event, ILambdaContext context) =>
         {
             record.Attributes.TryGetValue("ApproximateReceiveCount", out var receiveCountAttr);
 
-            var inboxContext = scope.ServiceProvider.GetRequiredService<InboxContext>();
-            inboxContext.MessageId = messageId;
-            inboxContext.ReceiveCount = int.TryParse(receiveCountAttr, out var count) ? count : 1;
-            inboxContext.Body = record.Body;
+            var eventContext = scope.ServiceProvider.GetRequiredService<EventContext>();
+            eventContext.MessageId = messageId;
+            eventContext.ReceiveCount = int.TryParse(receiveCountAttr, out var count) ? count : 1;
+            eventContext.Body = record.Body;
 
             context.Logger.LogInformation($"Publishing notification for event type: {classifiedEvent.GetType().Name}");
-
             await mediator.Publish(classifiedEvent);
-
             context.Logger.LogInformation($"Successfully processed Message ID: {messageId}, SQS message ID: {record.MessageId}");
         }
         catch (Exception ex)
