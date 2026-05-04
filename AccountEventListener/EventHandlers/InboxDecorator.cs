@@ -13,17 +13,38 @@ public class InboxDecorator<TNotification>(
 {
     public async ValueTask Handle(TNotification notification, CancellationToken cancellationToken)
     {
-        var isNew = await inboxRepository.TryRecordAsync(
-            inboxContext.MessageId,
-            notification.GetType().Name,
-            inboxContext.Body,
-            inboxContext.ReceiveCount,
-            cancellationToken);
-
-        if (!isNew)
+        var item = new InboxRepository.InboxItem
         {
-            context.Logger.LogWarning($"Duplicate message skipped. Message ID: {inboxContext.MessageId}");
-            return;
+            MessageId = inboxContext.MessageId,
+            EventType = notification.GetType().Name,
+            Payload = inboxContext.Body,
+            ReceiveCount = inboxContext.ReceiveCount
+        };
+
+        var created = await inboxRepository.TryCreateAsync(item, cancellationToken);
+
+        if (!created)
+        {
+            var existing = await inboxRepository.GetInboxItemAsync(inboxContext.MessageId, cancellationToken);
+
+            if (existing.Payload != inboxContext.Body)
+            {
+                throw new InvalidOperationException($"Message '{inboxContext.MessageId}' already exists with a different payload.");
+            }
+
+            if (existing.IsProcessed)
+            {
+                context.Logger.LogWarning($"Duplicate message skipped. Message ID: {inboxContext.MessageId}");
+                return;
+            }
+
+            var canProcess = await inboxRepository.TryUpdateReceiveCountAsync(inboxContext.MessageId, inboxContext.ReceiveCount, cancellationToken);
+
+            if (!canProcess)
+            {
+                context.Logger.LogWarning($"Duplicate message skipped. Message ID: {inboxContext.MessageId}");
+                return;
+            }
         }
 
         await inner.Handle(notification, cancellationToken);
