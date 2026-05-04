@@ -1,6 +1,7 @@
 using AccountProjection;
 using Amazon.Lambda.Core;
 using Domain;
+using Domain.Account;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,18 +25,28 @@ public class AccountValidationDecorator<TNotification>(
 
             context.Logger.LogInformation($"Found account {account?.Id} for event {typeof(TNotification).Name}");
 
-            if (account == null)
+            if (account == null && notification is not AccountOpened)
             {
-                throw new InvalidOperationException($"Account {notification.StreamId} not found for in read-side database");
+                throw new InvalidOperationException($"Account {notification.StreamId} not found in read-side database");
             }
 
-            if (notification.Version != account.Version + 1)
+            if (account != null && notification.Version <= account.Version)
+            {
+                context.Logger.LogWarning($"Duplicate business event skipped: {typeof(TNotification).Name} v{notification.Version} already applied to account {notification.StreamId} with current version {account.Version}");
+                return;
+            }
+
+            var expectedVersion = account?.Version + 1 ?? 1;
+            if (notification.Version != expectedVersion)
             {
                 throw new InvalidOperationException(
-                    $"Out-of-order event: expected version {account.Version + 1} but got {notification.Version} for account {notification.StreamId} on event {typeof(TNotification).Name}");
+                    $"Out-of-order event: expected version {expectedVersion} but got {notification.Version} for account {notification.StreamId} on event {typeof(TNotification).Name}");
             }
 
-            notificationContext.Account = account;
+            if (account is not null)
+            {
+                notificationContext.Account = account;
+            }
             await inner.Handle(notification, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
             context.Logger.LogInformation($"Account {notification.StreamId} projection updated successfully");

@@ -50,6 +50,7 @@ public static class EventListenerConfigurator
         services.AddScoped<EventContext>();
         services.AddScoped<InboxRepository>();
 
+        services.Decorate<INotificationHandler<AccountOpened>, AccountValidationDecorator<AccountOpened>>();
         services.Decorate<INotificationHandler<MoneyDeposited>, AccountValidationDecorator<MoneyDeposited>>();
         services.Decorate<INotificationHandler<MoneyWithdrawn>, AccountValidationDecorator<MoneyWithdrawn>>();
         services.Decorate<INotificationHandler<AccountClosed>, AccountValidationDecorator<AccountClosed>>();
