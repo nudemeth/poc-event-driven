@@ -1,5 +1,5 @@
 using AccountEventListener.Decorators;
-using AccountProjection;
+using AccountProjectionDataAccess;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using Amazon.Runtime;

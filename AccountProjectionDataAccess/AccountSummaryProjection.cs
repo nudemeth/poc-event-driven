@@ -1,4 +1,4 @@
-namespace AccountProjection;
+namespace AccountProjectionDataAccess;
 
 public class AccountSummaryProjection
 {

@@ -8,8 +8,8 @@
   <Folder Name="/AccountOutboxPublisher/">
     <Project Path="AccountOutboxPublisher/AccountOutboxPublisher.csproj" />
   </Folder>
-  <Folder Name="/AccountProjection/">
-    <Project Path="AccountProjection/AccountProjection.csproj" />
+  <Folder Name="/AccountProjectionDataAccess/">
+    <Project Path="AccountProjectionDataAccess/AccountProjectionDataAccess.csproj" />
   </Folder>
   <Folder Name="/AccountEventListener/">
     <Project Path="AccountEventListener/AccountEventListener.csproj" />

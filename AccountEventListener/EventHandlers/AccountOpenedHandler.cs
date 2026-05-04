@@ -1,4 +1,4 @@
-using AccountProjection;
+using AccountProjectionDataAccess;
 using Amazon.Lambda.Core;
 using Domain.Account;
 using Mediator;

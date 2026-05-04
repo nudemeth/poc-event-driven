@@ -7,7 +7,7 @@ A proof-of-concept event-driven architecture using AWS Lambda, DynamoDB, and SNS
 - **AccountApi**: Main API service for account operations
 - **AccountEventListener**: Lambda function triggered by DynamoDB Streams to listen for account events
 - **AccountOutboxPublisher**: Lambda function that publishes outbox items from DynamoDB to SNS on a schedule
-- **AccountProjection**: Read model/projection for account data
+- **AccountProjectionDataAccess**: Read model/projection for account data
 - **FraudDetectionService**: Service for fraud detection (placeholder)
 - **NotificationService**: Service for notifications (placeholder)
 

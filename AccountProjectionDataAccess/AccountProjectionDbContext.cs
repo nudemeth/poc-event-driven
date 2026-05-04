@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace AccountProjection;
+namespace AccountProjectionDataAccess;
 
 public class AccountProjectionDbContext : DbContext
 {

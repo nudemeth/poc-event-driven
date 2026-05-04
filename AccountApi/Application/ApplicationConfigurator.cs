@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Domain.Account;
-using AccountProjection;
+using AccountProjectionDataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 

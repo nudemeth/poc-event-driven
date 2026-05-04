@@ -1,4 +1,4 @@
-using AccountProjection;
+using AccountProjectionDataAccess;
 
 namespace AccountEventListener;
 

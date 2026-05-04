@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace AccountProjection;
+namespace AccountProjectionDataAccess;
 
 public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AccountProjectionDbContext>
 {

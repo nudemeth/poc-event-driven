@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace AccountProjection;
+namespace AccountProjectionDataAccess;
 
 public class AccountProjectionTypeConfig : IEntityTypeConfiguration<AccountSummaryProjection>
 {

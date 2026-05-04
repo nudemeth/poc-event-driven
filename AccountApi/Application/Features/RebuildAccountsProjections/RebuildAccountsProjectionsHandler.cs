@@ -1,4 +1,4 @@
-using AccountProjection;
+using AccountProjectionDataAccess;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 
