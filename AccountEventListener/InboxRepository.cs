@@ -42,6 +42,22 @@ public class InboxRepository
         }
         catch (ConditionalCheckFailedException)
         {
+            var existing = await _dynamoDbClient.GetItemAsync(new GetItemRequest
+            {
+                TableName = _tableName,
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    ["MessageId"] = new AttributeValue { S = messageId }
+                },
+                ProjectionExpression = "Payload"
+            }, ct);
+
+            if (existing.Item.TryGetValue("Payload", out var storedPayload) && storedPayload.S != payload)
+            {
+                throw new InvalidOperationException(
+                    $"Message '{messageId}' already exists with a different payload.");
+            }
+
             // Message already recorded — update receive count only if not yet processed.
             try
             {
