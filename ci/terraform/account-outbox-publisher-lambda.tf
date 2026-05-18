@@ -6,8 +6,9 @@ resource "aws_lambda_function" "account_outbox_publisher" {
   runtime          = "dotnet10"
   filename         = "./AccountOutboxPublisher.zip"
   source_code_hash = filebase64sha256("./AccountOutboxPublisher.zip")
-  publish          = true
-  timeout          = 60
+  publish                        = true
+  timeout                        = 60
+  reserved_concurrent_executions = 1
 
   environment {
     variables = {
@@ -28,6 +29,20 @@ resource "aws_cloudwatch_event_target" "outbox_publisher_target" {
   rule      = aws_cloudwatch_event_rule.outbox_publisher_schedule.name
   target_id = "AccountOutboxPublisherLambda"
   arn       = aws_lambda_function.account_outbox_publisher.arn
+}
+
+# DynamoDB Stream event source — fires immediately on new outbox items (INSERT only)
+resource "aws_lambda_event_source_mapping" "account_outbox_publisher_ddb_stream" {
+  event_source_arn  = aws_dynamodb_table.outbox.stream_arn
+  function_name     = aws_lambda_function.account_outbox_publisher.function_name
+  starting_position = "LATEST"
+  batch_size        = 100
+
+  filter_criteria {
+    filter {
+      pattern = jsonencode({ eventName = ["INSERT"] })
+    }
+  }
 }
 
 # Lambda Permission for EventBridge

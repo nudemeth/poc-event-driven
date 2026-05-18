@@ -2,12 +2,12 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json;
 using AccountOutboxPublisher;
 
 // The function handler that will be called when the Lambda is triggered
-var handler = async (object? input, ILambdaContext context) =>
+var handler = async (JsonElement input, ILambdaContext context) =>
 {
     // Configure dependency injection
     var configuration = new ConfigurationBuilder()
@@ -20,7 +20,8 @@ var handler = async (object? input, ILambdaContext context) =>
 
     var serviceProvider = services.BuildServiceProvider();
 
-    context.Logger.LogInformation("Outbox Publisher Lambda triggered.");
+    var triggerSource = IsDynamoDbStreamEvent(input) ? "DynamoDB Stream (CDC)" : "EventBridge schedule";
+    context.Logger.LogInformation($"Outbox Publisher Lambda triggered by {triggerSource}.");
 
     try
     {
@@ -41,3 +42,10 @@ var handler = async (object? input, ILambdaContext context) =>
 await LambdaBootstrapBuilder.Create(handler, new DefaultLambdaJsonSerializer())
     .Build()
     .RunAsync();
+
+static bool IsDynamoDbStreamEvent(JsonElement input) =>
+    input.ValueKind == JsonValueKind.Object &&
+    input.TryGetProperty("Records", out var records) &&
+    records.ValueKind == JsonValueKind.Array &&
+    records.GetArrayLength() > 0 &&
+    records[0].TryGetProperty("dynamodb", out _);

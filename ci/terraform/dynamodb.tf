@@ -34,10 +34,12 @@ resource "aws_dynamodb_table" "inbox" {
 }
 
 resource "aws_dynamodb_table" "outbox" {
-  name         = "AccountsOutbox"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "AccountId"
-  range_key    = "CreatedAt"
+  name             = "AccountsOutbox"
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "AccountId"
+  range_key        = "CreatedAt"
+  stream_enabled   = true
+  stream_view_type = "NEW_IMAGE"
 
   ttl {
     attribute_name = "ExpiresAt"
